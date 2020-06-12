@@ -10,5 +10,5 @@ config = %Config {
     {Omnibot.Contrib.Fortune, channels: ["#idleville"]},
   ],
 
-  module_paths: [{"modules", recurse: true}]
+  #module_paths: [{"modules", recurse: true}]
 }
