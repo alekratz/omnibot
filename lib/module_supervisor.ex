@@ -29,7 +29,7 @@ defmodule Omnibot.ModuleSupervisor do
       end
 
     # Add each child to the "loaded modules" list in the State
-    Enum.each(IO.inspect(children), fn {module, opts} -> State.add_loaded_module({module, opts[:cfg]}) end)
+    Enum.each(children, fn {module, opts} -> State.add_loaded_module({module, opts[:cfg]}) end)
 
     Supervisor.init(children, strategy: :one_for_one)
   end
