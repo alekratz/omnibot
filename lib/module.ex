@@ -1,7 +1,7 @@
 defmodule Omnibot.Module do
   defmodule Hooks do
     defmacro __before_compile__(_env) do
-      quote do
+      quote generated: true do
         @impl true
         def on_channel_msg(_channel, _nick, _line), do: nil
 

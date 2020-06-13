@@ -17,7 +17,10 @@ defmodule Omnibot.Config do
   Gets all channels that the bot should join via its modules.
   """
   def all_channels(cfg) do
-    Enum.flat_map(cfg.modules, fn {_, [channels: channels]} -> channels end)
+    Enum.flat_map(cfg.modules, fn
+      {_, [channels: :all]} -> []
+      {_, [channels: channels]} -> channels
+    end)
       |> MapSet.new()
       |> MapSet.to_list()
   end
@@ -28,7 +31,9 @@ defmodule Omnibot.Config do
   """
   def channel_modules(cfg, channel) do
     cfg.modules 
-      |> Enum.filter(fn {_, cfg} -> Enum.member?(cfg[:channels] || [], channel) end)
+    |> Enum.filter(fn {_, cfg} ->
+      cfg[:channels] == :all or Enum.member?(cfg[:channels] || [], channel) 
+    end)
   end
 
   def msg_prefix(cfg) do

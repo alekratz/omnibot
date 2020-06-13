@@ -65,6 +65,17 @@ defmodule Omnibot.Irc.Msg do
       params: params,
     }
   end
+
+  @doc "Gets the channel that the given message is targeting, if any."
+  def channel(msg) do
+    case String.upcase(msg.command) do
+      "PRIVMSG" -> Enum.at(msg.params, 0)
+      "JOIN" -> Enum.at(msg.params, 0)
+      "PART" -> Enum.at(msg.params, 0)
+      "KICK" -> Enum.at(msg.params, 0)
+      _ -> nil
+    end
+  end
 end
 
 defimpl String.Chars, for: Irc.Msg.Prefix do
