@@ -1,33 +1,33 @@
-alias Omnibot.Irc
-alias Omnibot.Msg
+alias Omnibot.{Irc, Irc.Msg}
 
-defmodule Omnibot.Irc.MsgTest do
+
+defmodule Omnibot.MsgTest do
   use ExUnit.Case
 
   # doctest Irc
 
   test "irc message parsing" do
-    assert %Irc.Msg{
-      prefix: %Irc.Msg.Prefix{nick: "example.com"},
+    assert %Msg{
+      prefix: %Msg.Prefix{nick: "example.com"},
       command: "PRIVMSG",
       params: [],
-    } == Irc.Msg.parse(":example.com PRIVMSG")
+    } == Msg.parse(":example.com PRIVMSG")
 
-    assert %Irc.Msg{
-      prefix: %Irc.Msg.Prefix{nick: "example.com"},
+    assert %Msg{
+      prefix: %Msg.Prefix{nick: "example.com"},
       command: "PRIVMSG",
       params: ["#channel", "message text"],
-    } == Irc.Msg.parse(":example.com PRIVMSG #channel :message text")
+    } == Msg.parse(":example.com PRIVMSG #channel :message text")
 
-    assert %Irc.Msg{
-      prefix: %Irc.Msg.Prefix{nick: "example.com"},
+    assert %Msg{
+      prefix: %Msg.Prefix{nick: "example.com"},
       command: "PRIVMSG",
       params: ["#channel", "message", "text"],
-    } == Irc.Msg.parse(":example.com PRIVMSG #channel message text")
+    } == Msg.parse(":example.com PRIVMSG #channel message text")
   end
 
   test "irc message prefix parsing" do
-    alias Irc.Msg.Prefix
+    alias Msg.Prefix
     assert Prefix.parse(":example.com") != %Prefix{}
 
     %Prefix{
@@ -51,7 +51,7 @@ defmodule Omnibot.Irc.MsgTest do
   end
 
   test "irc message prefix to_string" do
-    alias Irc.Msg.Prefix
+    alias Msg.Prefix
 
     prefixes = [
       "example.com",
@@ -64,13 +64,28 @@ defmodule Omnibot.Irc.MsgTest do
   end
 
   test "irc message to_string" do
-    alias Irc.Msg
-
     msgs = [
       ":example.com PRIVMSG #command",
       ":example.com PRIVMSG #channel :message text"
     ]
 
     for msg <- msgs, do: assert(Msg.parse(msg) |> to_string() == msg)
+  end
+
+  test "irc message extracts channel properly" do
+    msg = Msg.parse(":example.com PRIVMSG #channel message text")
+    assert Msg.channel(msg) == "#channel"
+
+    msg = Msg.parse(":example.com JOIN #join")
+    assert Msg.channel(msg) == "#join"
+
+    msg = Msg.parse(":example.com PART #part")
+    assert Msg.channel(msg) == "#part"
+
+    msg = Msg.parse(":example.com KICK #kicked nick")
+    assert Msg.channel(msg) == "#kicked"
+
+    msg = Msg.parse(":example.com PING 1234")
+    assert Msg.channel(msg) == nil
   end
 end
