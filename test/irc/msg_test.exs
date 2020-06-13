@@ -1,4 +1,4 @@
-alias Omnibot.{Irc, Irc.Msg}
+alias Omnibot.Irc.Msg
 
 
 defmodule Omnibot.MsgTest do

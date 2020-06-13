@@ -15,8 +15,8 @@ defmodule Omnibot.Supervisor do
     children = [
       {Task.Supervisor, name: Omnibot.RouterSupervisor, strategy: :one_for_one},
       {Omnibot.State, cfg: cfg, name: Omnibot.State},
+      {Omnibot.ModuleSupervisor, cfg: cfg, name: Omnibot.ModuleSupervisor},
       {Omnibot.Irc, name: Omnibot.Irc},
-      {Omnibot.ModuleSupervisor, cfg: cfg, name: Omnibot.ModuleSupervisor}
     ]
 
     # TODO : how to handle config reloading?

@@ -20,12 +20,12 @@ defmodule Omnibot.Contrib.Fortune do
   command "!fortune", [to] do
     fortune = Enum.random(@fortunes)
     reply = "#{to}: #{fortune}"
-    Irc.send_to(channel, reply)
+    Irc.send_to(irc, channel, reply)
   end
 
   command "!fortune" do
     fortune = Enum.random(@fortunes)
     reply = "#{nick}: #{fortune}"
-    Irc.send_to(channel, reply)
+    Irc.send_to(irc, channel, reply)
   end
 end

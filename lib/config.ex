@@ -25,17 +25,6 @@ defmodule Omnibot.Config do
       |> MapSet.to_list()
   end
 
-  @doc ~S"""
-  Gets a list of all `{module, mod_cfg}` pairs from the given configuration
-  that are listening to the given channel.
-  """
-  def channel_modules(cfg, channel) do
-    cfg.modules 
-    |> Enum.filter(fn {_, cfg} ->
-      cfg[:channels] == :all or Enum.member?(cfg[:channels] || [], channel) 
-    end)
-  end
-
   def msg_prefix(cfg) do
     %Msg.Prefix {
       nick: cfg.nick,

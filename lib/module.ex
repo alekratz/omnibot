@@ -3,19 +3,19 @@ defmodule Omnibot.Module do
     defmacro __before_compile__(_env) do
       quote generated: true do
         @impl true
-        def on_channel_msg(_channel, _nick, _line), do: nil
+        def on_channel_msg(_irc, _channel, _nick, _line), do: nil
 
         @impl true
-        def on_channel_msg(_channel, _nick, _cmd, _params), do: nil
+        def on_channel_msg(_irc, _channel, _nick, _cmd, _params), do: nil
 
         @impl true
-        def on_join(_channel, _nick), do: nil
+        def on_join(_irc, _channel, _nick), do: nil
 
         @impl true
-        def on_part(_channel, _nick), do: nil
+        def on_part(_irc, _channel, _nick), do: nil
 
         @impl true
-        def on_kick(_channel, _nick), do: nil
+        def on_kick(_irc, _channel, _nick), do: nil
       end
     end
   end
@@ -38,13 +38,13 @@ defmodule Omnibot.Module do
       end
 
       @impl Module
-      def on_msg(msg) do
+      def on_msg(irc, msg) do
         # TODO - instead of using a router for modules, consider using a PubSub with a Registry:
         # https://hexdocs.pm/elixir/master/Registry.html#module-using-as-a-pubsub
-        route_msg(msg)
+        route_msg(irc, msg)
       end
 
-      defp route_msg(msg) do
+      defp route_msg(irc, msg) do
         nick = msg.prefix.nick
 
         case String.upcase(msg.command) do
@@ -53,21 +53,21 @@ defmodule Omnibot.Module do
             line = Enum.join(params, " ")
 
             case String.split(line, " ") do
-              [cmd | params] -> on_channel_msg(channel, nick, cmd, params)
-              _ -> on_channel_msg(channel, nick, line)
+              [cmd | params] -> on_channel_msg(irc, channel, nick, cmd, params)
+              _ -> on_channel_msg(irc, channel, nick, line)
             end
 
           "JOIN" ->
             [channel | _] = msg.params
-            on_join(channel, nick)
+            on_join(irc, channel, nick)
 
           "PART" ->
             [channel | _] = msg.params
-            on_part(channel, nick)
+            on_part(irc, channel, nick)
 
           "KICK" ->
             [channel | _] = msg.params
-            on_kick(channel, nick)
+            on_kick(irc, channel, nick)
 
           _ ->
             nil
@@ -80,22 +80,23 @@ defmodule Omnibot.Module do
     end
   end
 
-  @callback on_msg(msg :: %Omnibot.Irc.Msg{}) :: any
-  @callback on_channel_msg(channel :: String.t(), nick :: String.t(), line :: String.t()) :: any
+  @callback on_msg(irc :: pid(), msg :: %Omnibot.Irc.Msg{}) :: any
+  @callback on_channel_msg(irc :: pid(), channel :: String.t(), nick :: String.t(), line :: String.t()) :: any
   @callback on_channel_msg(
+              irc :: pid(),
               channel :: String.t(),
               nick :: String.t(),
               cmd :: String.t(),
               params :: [String.t()]
             ) :: any
-  @callback on_join(channel :: String.t(), nick :: String.t()) :: any
-  @callback on_part(channel :: String.t(), nick :: String.t()) :: any
-  @callback on_kick(channel :: String.t(), nick :: String.t()) :: any
+  @callback on_join(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
+  @callback on_part(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
+  @callback on_kick(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
 
   defmacro command(cmd, opts) do
     quote generated: true do
       @impl Omnibot.Module
-      def on_channel_msg(var!(channel), var!(nick), unquote(cmd), var!(params)) do
+      def on_channel_msg(var!(irc), var!(channel), var!(nick), unquote(cmd), var!(params)) do
         unquote(opts[:do])
       end
     end
@@ -115,7 +116,7 @@ defmodule Omnibot.Module do
 
     quote generated: true do
       @impl Omnibot.Module
-      def on_channel_msg(var!(channel), var!(nick), unquote(cmd), unquote(params)) do
+      def on_channel_msg(var!(irc), var!(channel), var!(nick), unquote(cmd), unquote(params)) do
         unquote(opts[:do])
       end
     end

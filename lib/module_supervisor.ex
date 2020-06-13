@@ -3,6 +3,7 @@ defmodule Omnibot.ModuleSupervisor do
 
   use Supervisor
   require Logger
+  alias Omnibot.State
 
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts[:cfg], opts)
@@ -12,6 +13,10 @@ defmodule Omnibot.ModuleSupervisor do
   def init(cfg) do
     compile_files(cfg.module_paths || [])
 
+    # These are modules that need to be loaded for core functionality of the bot
+    #{Omnibot.Core.Welcome, cfg: [channels: :all]},
+    #{Omnibot.Core.Join, cfg: [channels: :all]},
+
     # Map the modules in the configuration to the children
     children =
       for mod <- cfg.modules do
@@ -20,6 +25,9 @@ defmodule Omnibot.ModuleSupervisor do
           name -> {name, cfg: [], name: name}
         end
       end
+
+    # Add each child to the "loaded modules" list in the State
+    Enum.each(children, fn module -> State.add_loaded_module(module) end)
 
     Supervisor.init(children, strategy: :one_for_one)
   end

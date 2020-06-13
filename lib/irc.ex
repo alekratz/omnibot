@@ -22,16 +22,12 @@ defmodule Omnibot.Irc do
 
   def send_msg(irc, command, param), do: send_msg(irc, command, [param])
 
-  def send_to(channel, text), do: send_to(__MODULE__, channel, text)
   def send_to(irc, channel, text), do: send_msg(irc, "PRIVMSG", [channel, text])
 
-  def join(channel), do: join(__MODULE__, channel)
   def join(irc, channel), do: send_msg(irc, "JOIN", channel)
 
-  def part(channel), do: part(__MODULE__, channel)
   def part(irc, channel), do: send_msg(irc, "PART", channel)
 
-  def sync_channels(), do: sync_channels(__MODULE__)
   def sync_channels(irc), do: GenServer.cast(irc, :sync_channels)
 
   ## Server callbacks
@@ -45,7 +41,6 @@ defmodule Omnibot.Irc do
       :gen_tcp.connect(to_charlist(cfg.server), cfg.port, [:binary, active: false, packet: :line])
 
     # Wait for first message
-    #{:ok, _} = :gen_tcp.recv(socket, 0)
     send_msg(self(), "NICK", cfg.nick)
     send_msg(self(), "USER", [cfg.user, "0", "*", cfg.real])
     :inet.setopts(socket, [active: true])

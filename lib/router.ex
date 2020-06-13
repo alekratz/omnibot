@@ -1,12 +1,13 @@
 defmodule Omnibot.Router do
   require Logger
-  alias Omnibot.{Config, Irc, Irc.Msg, State}
+  alias Omnibot.{Irc.Msg, State}
   
-  def route(_irc, msg) do
-    channel = Msg.channel(msg)
-    State.cfg()
-      |> Config.channel_modules(channel)
-      |> Enum.each(fn {module, _} -> module.on_msg(msg) end)
+  def route(irc, msg) do
+    #channel = Msg.channel(msg)
+    channel = IO.inspect(Msg.channel(msg))
+    IO.inspect(State.channel_modules(channel))
+    State.channel_modules(channel)
+      |> Enum.each(fn {module, _} -> module.on_msg(irc, msg) end)
   end
 
   #def handle(_irc, :privmsg, msg) do
