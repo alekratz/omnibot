@@ -14,11 +14,13 @@ defmodule Omnibot.ModuleSupervisor do
     compile_files(cfg.module_paths || [])
 
     # These are modules that need to be loaded for core functionality of the bot
-    #{Omnibot.Core.Welcome, cfg: [channels: :all]},
-    #{Omnibot.Core.Join, cfg: [channels: :all]},
+    core = [
+      {Omnibot.Core, cfg: [channels: :all]},
+    ]
 
     # Map the modules in the configuration to the children
     children =
+      core ++
       for mod <- cfg.modules do
         case mod do
           {name, cfg} -> {name, cfg: cfg, name: name}
@@ -27,7 +29,7 @@ defmodule Omnibot.ModuleSupervisor do
       end
 
     # Add each child to the "loaded modules" list in the State
-    Enum.each(children, fn module -> State.add_loaded_module(module) end)
+    Enum.each(IO.inspect(children), fn {module, opts} -> State.add_loaded_module({module, opts[:cfg]}) end)
 
     Supervisor.init(children, strategy: :one_for_one)
   end

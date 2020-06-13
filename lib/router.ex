@@ -3,9 +3,7 @@ defmodule Omnibot.Router do
   alias Omnibot.{Irc.Msg, State}
   
   def route(irc, msg) do
-    #channel = Msg.channel(msg)
-    channel = IO.inspect(Msg.channel(msg))
-    IO.inspect(State.channel_modules(channel))
+    channel = Msg.channel(msg)
     State.channel_modules(channel)
       |> Enum.each(fn {module, _} -> module.on_msg(irc, msg) end)
   end
