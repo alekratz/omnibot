@@ -17,20 +17,15 @@ defmodule Omnibot.Contrib.Fortune do
     "Godly Luck",
   ]
 
-  ## Client API
-
-  def privmsg(module, channel, nick, line) do
-    GenServer.cast(module, {:privmsg, {channel, nick, line}})
+  command "!fortune", [to] do
+    fortune = Enum.random(@fortunes)
+    reply = "#{to}: #{fortune}"
+    Irc.send_to(channel, reply)
   end
 
-  ## Server callbacks
-
-  @impl true
-  def on_channel_msg(channel, nick, line) do
-    if line == "!fortune" do
-      fortune = Enum.random(@fortunes)
-      reply = "#{nick}: #{fortune}"
-      Irc.send_to(channel, reply)
-    end
+  command "!fortune" do
+    fortune = Enum.random(@fortunes)
+    reply = "#{nick}: #{fortune}"
+    Irc.send_to(channel, reply)
   end
 end

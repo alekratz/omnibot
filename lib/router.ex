@@ -33,7 +33,7 @@ defmodule Omnibot.Router do
     # Find modules that want this message
     State.cfg()
       |> Config.channel_modules(channel)
-      |> Enum.each(fn {module, _} -> module.msg(module, msg) end)
+      |> Enum.each(fn {module, _} -> module.on_msg(msg) end)
   end
 
   def handle(_irc, :join, %Msg {prefix: %Msg.Prefix{nick: nick}, params: [channel | _]}) do
