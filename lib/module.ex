@@ -15,7 +15,10 @@ defmodule Omnibot.Module do
         def on_part(_irc, _channel, _nick), do: nil
 
         @impl true
-        def on_kick(_irc, _channel, _nick), do: nil
+        def on_kick(_irc, _channel, _nick, _target), do: nil
+
+        @impl true
+        def on_init(_cfg), do: nil
       end
     end
   end
@@ -30,11 +33,24 @@ defmodule Omnibot.Module do
       @behaviour Module
 
       def start_link(opts) do
-        Agent.start_link(fn -> opts[:cfg] end, opts ++ [name: __MODULE__])
+        cfg = opts[:cfg]
+        Agent.start_link(fn -> {cfg, on_init(cfg)} end, opts ++ [name: __MODULE__])
       end
 
       def cfg do
-        Agent.get(__MODULE__, & &1)
+        Agent.get(__MODULE__, fn {cfg, _} -> cfg end)
+      end
+
+      def state do
+        Agent.get(__MODULE__, fn {_, state} -> state end)
+      end
+
+      def update_state(update, timeout \\ 5000) do
+        Agent.update(
+          __MODULE__,
+          fn {cfg, state} -> {cfg, apply(update, [state])} end,
+          timeout
+        )
       end
 
       @impl Module
@@ -66,8 +82,8 @@ defmodule Omnibot.Module do
             on_part(irc, channel, nick)
 
           "KICK" ->
-            [channel | _] = msg.params
-            on_kick(irc, channel, nick)
+            [channel, target | _] = msg.params
+            on_kick(irc, channel, nick, target)
 
           _ ->
             nil
@@ -91,7 +107,8 @@ defmodule Omnibot.Module do
             ) :: any
   @callback on_join(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
   @callback on_part(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
-  @callback on_kick(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
+  @callback on_kick(irc :: pid(), channel :: String.t(), nick :: String.t(), target :: String.t()) :: any
+  @callback on_init(cfg :: any) :: any
 
   defmacro command(cmd, opts) do
     quote generated: true do

@@ -28,8 +28,6 @@ defmodule Omnibot.Irc do
 
   def part(irc, channel), do: send_msg(irc, "PART", channel)
 
-  def sync_channels(irc), do: GenServer.cast(irc, :sync_channels)
-
   defp route_msg(irc, msg) do
     channel = Msg.channel(msg)
     State.channel_modules(channel)
@@ -72,22 +70,6 @@ defmodule Omnibot.Irc do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_cast(:sync_channels, socket) do
-    cfg = State.cfg()
-    desired = MapSet.new(Config.all_channels(cfg))
-    present = MapSet.new(State.channels())
-    to_join = MapSet.difference(desired, present)
-      |> MapSet.to_list()
-    to_part = MapSet.difference(present, desired)
-      |> MapSet.to_list()
-
-    Enum.each(to_join, fn channel -> join(self(), channel) end)
-    Enum.each(to_part, fn channel -> part(self(), channel) end)
-
-    {:noreply, socket}
-  end
-  
   @impl true
   def handle_info({:tcp, _socket, line}, socket) do
     Logger.debug(String.trim(line))

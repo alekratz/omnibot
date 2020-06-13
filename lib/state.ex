@@ -36,30 +36,6 @@ defmodule Omnibot.State do
   @doc "Gets all loaded modules from the given state."
   def loaded_modules(state), do: GenServer.call(state, :loaded_modules)
 
-  @doc "Gets all channels that the bot is present in from the default State process."
-  def channels(), do: channels(__MODULE__)
-
-  @doc "Gets all channels that the bot is present in from the given State process."
-  def channels(state) do
-    GenServer.call(state, :channels)
-  end
-  
-  @doc "Adds a channel to the list of joined channels of the default State process, if it is not already present."
-  def add_channel(channel), do: add_channel(__MODULE__, channel)
-
-  @doc "Adds a channel to the list of joined channels of the given State process, if it is not already present."
-  def add_channel(state, channel) do
-    GenServer.cast(state, {:add_channel, channel})
-  end
-
-  @doc "Removes a channel from the list of joined channels of the default State process, if it exists."
-  def remove_channel(channel), do: remove_channel(__MODULE__, channel)
-
-  @doc "Removes a channel from the list of joined channels of the given State process, if it exists."
-  def remove_channel(state, channel) do
-    GenServer.cast(state, {:remove_channel, channel})
-  end
-
   def all_channels(), do: all_channels(__MODULE__)
 
   def all_channels(state) do
@@ -101,11 +77,6 @@ defmodule Omnibot.State do
   end
 
   @impl true
-  def handle_call(:channels, _from, state) do
-    {:reply, state.channels, state}
-  end
-
-  @impl true
   def handle_call(:loaded_modules, _from, state) do
     {:reply, state.module_map, state}
   end
@@ -114,15 +85,5 @@ defmodule Omnibot.State do
   def handle_cast({:add_loaded_module, {module, cfg}}, state) do
     state = %{state | module_map: Map.put(state.module_map, module, cfg)}
     {:noreply, state}
-  end
-
-  @impl true
-  def handle_cast({:add_channel, channel}, state) do
-    {:noreply, %{state | channels: state.channels |> MapSet.put(channel)}}
-  end
-
-  @impl true
-  def handle_cast({:remove_channel, channel}, state) do
-    {:noreply, %{state | channels: state.channels |> MapSet.delete(channel)}}
   end
 end
