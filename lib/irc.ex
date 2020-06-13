@@ -30,6 +30,12 @@ defmodule Omnibot.Irc do
 
   def sync_channels(irc), do: GenServer.cast(irc, :sync_channels)
 
+  defp route_msg(irc, msg) do
+    channel = Msg.channel(msg)
+    State.channel_modules(channel)
+      |> Enum.each(fn {module, _} -> module.on_msg(irc, msg) end)
+  end
+
   ## Server callbacks
 
   @impl true
@@ -91,7 +97,7 @@ defmodule Omnibot.Irc do
     irc = self()
     {:ok, _task} = Task.Supervisor.start_child(
       Omnibot.RouterSupervisor,
-      fn -> Omnibot.Router.route(irc, msg) end
+      fn -> route_msg(irc, msg) end
     )
     {:noreply, socket}
   end
