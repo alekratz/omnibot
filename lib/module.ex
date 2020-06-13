@@ -104,7 +104,7 @@ defmodule Omnibot.Module do
   defmacro command(cmd, params, opts) do
     params =
       Enum.map(
-        IO.inspect(params),
+        params,
         fn param ->
           case param do
             {_, _, _} -> quote(do: var!(unquote(param)))
