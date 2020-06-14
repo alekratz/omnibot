@@ -19,6 +19,8 @@ defmodule Omnibot.Module do
 
         @impl true
         def on_init(_cfg), do: nil
+
+        def commands(), do: MapSet.to_list(@commands)
       end
     end
   end
@@ -69,7 +71,9 @@ defmodule Omnibot.Module do
             line = Enum.join(params, " ")
 
             case String.split(line, " ") do
-              [cmd | params] -> on_channel_msg(irc, channel, nick, cmd, params)
+              [cmd | params] -> if Enum.member?(commands(), cmd),
+                  do: on_channel_msg(irc, channel, nick, cmd, params),
+                  else: on_channel_msg(irc, channel, nick, line)
               _ -> on_channel_msg(irc, channel, nick, line)
             end
 
@@ -92,6 +96,7 @@ defmodule Omnibot.Module do
 
       defoverridable Module
 
+      @commands MapSet.new()
       @before_compile Omnibot.Module.Hooks
     end
   end
@@ -112,6 +117,7 @@ defmodule Omnibot.Module do
 
   defmacro command(cmd, opts) do
     quote generated: true do
+      @commands MapSet.put(@commands, unquote(cmd))
       @impl Omnibot.Module
       def on_channel_msg(var!(irc), var!(channel), var!(nick), unquote(cmd), var!(params)) do
         unquote(opts[:do])
@@ -132,6 +138,7 @@ defmodule Omnibot.Module do
       )
 
     quote generated: true do
+      @commands MapSet.put(@commands, unquote(cmd))
       @impl Omnibot.Module
       def on_channel_msg(var!(irc), var!(channel), var!(nick), unquote(cmd), unquote(params)) do
         unquote(opts[:do])
