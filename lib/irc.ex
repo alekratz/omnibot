@@ -30,8 +30,15 @@ defmodule Omnibot.Irc do
 
   defp route_msg(irc, msg) do
     channel = Msg.channel(msg)
+
     State.channel_modules(channel)
-      |> Enum.each(fn {module, _} -> module.on_msg(irc, msg) end)
+    |> Enum.each(fn {module, _} ->
+      # Create a new task for each module
+      {:ok, _task} = Task.Supervisor.start_child(
+        Omnibot.RouterSupervisor,
+        fn -> module.on_msg(irc, msg) end
+      )
+    end)
   end
 
   ## Server callbacks
@@ -76,11 +83,7 @@ defmodule Omnibot.Irc do
     msg = Msg.parse(line)
 
     # Send the message to the router
-    irc = self()
-    {:ok, _task} = Task.Supervisor.start_child(
-      Omnibot.RouterSupervisor,
-      fn -> route_msg(irc, msg) end
-    )
+    route_msg(self(), msg)
     {:noreply, socket}
   end
 end
