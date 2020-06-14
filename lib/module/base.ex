@@ -1,4 +1,4 @@
-defmodule Omnibot.Module do
+defmodule Omnibot.Module.Base do
   defmodule Hooks do
     defmacro __before_compile__(_env) do
       quote generated: true do
@@ -30,35 +30,13 @@ defmodule Omnibot.Module do
 
   defmacro __using__([]) do
     quote do
-      use Agent
       alias Omnibot.{Irc, Module}
-      import Omnibot.Module
+      import Omnibot.Module.Base
       require Logger
 
-      @behaviour Module
+      @behaviour Module.Base
 
-      def start_link(opts) do
-        cfg = opts[:cfg]
-        Agent.start_link(fn -> {cfg, on_init(cfg)} end, opts ++ [name: __MODULE__])
-      end
-
-      def cfg do
-        Agent.get(__MODULE__, fn {cfg, _} -> cfg end)
-      end
-
-      def state do
-        Agent.get(__MODULE__, fn {_, state} -> state end)
-      end
-
-      def update_state(update, timeout \\ 5000) do
-        Agent.update(
-          __MODULE__,
-          fn {cfg, state} -> {cfg, apply(update, [state])} end,
-          timeout
-        )
-      end
-
-      @impl Module
+      @impl Module.Base
       def on_msg(irc, msg) do
         # TODO - instead of using a router for modules, consider using a PubSub with a Registry:
         # https://hexdocs.pm/elixir/master/Registry.html#module-using-as-a-pubsub
@@ -97,11 +75,11 @@ defmodule Omnibot.Module do
         end
       end
 
-      defoverridable Module
+      defoverridable Module.Base
 
       @commands MapSet.new()
       @default_config []
-      @before_compile Omnibot.Module.Hooks
+      @before_compile Omnibot.Module.Base.Hooks
     end
   end
 
@@ -123,7 +101,7 @@ defmodule Omnibot.Module do
   defmacro command(cmd, opts) do
     quote generated: true do
       @commands MapSet.put(@commands, unquote(cmd))
-      @impl Omnibot.Module
+      @impl Omnibot.Module.Base
       def on_channel_msg(var!(irc), var!(channel), var!(nick), unquote(cmd), var!(params)) do
         unquote(opts[:do])
       end
@@ -144,7 +122,7 @@ defmodule Omnibot.Module do
 
     quote generated: true do
       @commands MapSet.put(@commands, unquote(cmd))
-      @impl Omnibot.Module
+      @impl Omnibot.Module.Base
       def on_channel_msg(var!(irc), var!(channel), var!(nick), unquote(cmd), unquote(params)) do
         unquote(opts[:do])
       end
