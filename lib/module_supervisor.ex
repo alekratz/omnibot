@@ -15,16 +15,15 @@ defmodule Omnibot.ModuleSupervisor do
 
     # These are modules that need to be loaded for core functionality of the bot
     core = [
-      {Omnibot.Core, cfg: [channels: :all]},
+      Omnibot.Core
     ]
 
     # Map the modules in the configuration to the children
     children =
-      core ++
-      for mod <- cfg.modules do
+      for mod <- (core ++ cfg.modules) do
         case mod do
-          {name, cfg} -> {name, cfg: cfg, name: name}
-          name -> {name, cfg: [], name: name}
+          {name, cfg} -> {name, cfg: cfg ++ name.default_config(), name: name}
+          name -> {name, cfg: name.default_config(), name: name}
         end
       end
 

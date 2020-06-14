@@ -20,6 +20,9 @@ defmodule Omnibot.Module do
         @impl true
         def on_init(_cfg), do: nil
 
+        @impl true
+        def default_config(), do: @default_config
+
         def commands(), do: MapSet.to_list(@commands)
       end
     end
@@ -97,6 +100,7 @@ defmodule Omnibot.Module do
       defoverridable Module
 
       @commands MapSet.new()
+      @default_config []
       @before_compile Omnibot.Module.Hooks
     end
   end
@@ -114,6 +118,7 @@ defmodule Omnibot.Module do
   @callback on_part(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
   @callback on_kick(irc :: pid(), channel :: String.t(), nick :: String.t(), target :: String.t()) :: any
   @callback on_init(cfg :: any) :: any
+  @callback default_config() :: any
 
   defmacro command(cmd, opts) do
     quote generated: true do

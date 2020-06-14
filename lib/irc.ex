@@ -32,12 +32,22 @@ defmodule Omnibot.Irc do
     channel = Msg.channel(msg)
 
     State.channel_modules(channel)
-    |> Enum.each(fn {module, _} ->
+    |> Enum.each(fn {module, mod_cfg} ->
       # Create a new task for each module
-      {:ok, _task} = Task.Supervisor.start_child(
-        Omnibot.RouterSupervisor,
-        fn -> module.on_msg(irc, msg) end
-      )
+      {:ok, _task} =
+        Task.Supervisor.start_child(
+          Omnibot.RouterSupervisor,
+          fn ->
+            task = Task.Supervisor.async(
+              Omnibot.RouterSupervisor,
+              fn -> module.on_msg(irc, msg) end
+            )
+
+            # Time out after 10 seconds by default
+            timeout = mod_cfg[:timeout] || 10_000
+            Task.await(task, timeout)
+          end
+        )
     end)
   end
 
@@ -54,7 +64,7 @@ defmodule Omnibot.Irc do
     # Wait for first message
     send_msg(self(), "NICK", cfg.nick)
     send_msg(self(), "USER", [cfg.user, "0", "*", cfg.real])
-    :inet.setopts(socket, [active: true])
+    :inet.setopts(socket, active: true)
 
     {:ok, socket}
   end

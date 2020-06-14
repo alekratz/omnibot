@@ -2,6 +2,8 @@ defmodule Omnibot.Core do
   use Omnibot.Module
   alias Omnibot.State
 
+  @default_config [channels: :all]
+
   @impl true
   def on_join(irc, channel, nick) do
     cfg = State.cfg()

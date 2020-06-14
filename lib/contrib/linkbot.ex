@@ -2,6 +2,8 @@ defmodule Omnibot.Contrib.Linkbot do
   use Omnibot.Module
   require Logger
 
+  @default_config timeout: 30_000
+
   defmodule Client do
     use Tesla
 
@@ -13,6 +15,7 @@ defmodule Omnibot.Contrib.Linkbot do
 
     def get_title(url) do
       if should_get?(url) do
+        Process.sleep(11_000)
         resp = get!(url)
         %{"title" => title} = Regex.named_captures(@title_regex, resp.body)
         title
