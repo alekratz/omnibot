@@ -4,8 +4,16 @@ defmodule Omnibot.Contrib.Linkbot do
 
   @default_config timeout: 30_000
 
+  @hostname_blacklist ~r/(^localhost$|\.local$|\.localdomain$|\.home$|^[^.]+$|^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$)/i
+
+  def blacklisted?(url) do
+    host = URI.parse(url).host
+    Regex.match?(@hostname_blacklist, host)
+  end
+
   defmodule Client do
     use Tesla
+    alias Omnibot.Contrib.Linkbot
 
     plug Tesla.Middleware.Headers, [{"user-agent", "Tesla/Omnibot"}]
     plug Tesla.Middleware.FollowRedirects, max_redirects: 10
@@ -15,7 +23,6 @@ defmodule Omnibot.Contrib.Linkbot do
 
     def get_title(url) do
       if should_get?(url) do
-        Process.sleep(11_000)
         resp = get!(url)
         %{"title" => title} = Regex.named_captures(@title_regex, resp.body)
         title
@@ -23,10 +30,14 @@ defmodule Omnibot.Contrib.Linkbot do
     end
 
     defp should_get?(url) do
-      resp = head!(url)
-      Tesla.get_header(resp, "content-type")
-      |> String.downcase()
-      |> String.contains?(["html", "text"])
+      if Linkbot.blacklisted?(url) do
+        false
+      else
+        resp = head!(url)
+        Tesla.get_header(resp, "content-type")
+        |> String.downcase()
+        |> String.contains?(["html", "text"])
+      end
     end
   end
 
