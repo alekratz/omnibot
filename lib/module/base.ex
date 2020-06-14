@@ -32,7 +32,6 @@ defmodule Omnibot.Module.Base do
     quote do
       alias Omnibot.{Irc, Module}
       import Omnibot.Module.Base
-      require Logger
 
       @behaviour Module.Base
 
