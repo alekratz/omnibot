@@ -3,7 +3,6 @@ defmodule Omnibot.Contrib.Linkbot do
   require Logger
 
   @default_config timeout: 30_000
-
   @hostname_blacklist ~r/(^localhost$|\.local$|\.localdomain$|\.home$|^[^.]+$|^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$)/i
 
   def blacklisted?(url) do
@@ -23,6 +22,7 @@ defmodule Omnibot.Contrib.Linkbot do
 
     def get_title(url) do
       if should_get?(url) do
+        Logger.info("Fetching #{url}")
         resp = get!(url)
         %{"title" => title} = Regex.named_captures(@title_regex, resp.body)
         title
@@ -46,6 +46,7 @@ defmodule Omnibot.Contrib.Linkbot do
   @impl true
   def on_channel_msg(irc, channel, _nick, line) do
     Regex.scan(@url_regex, line)
+    |> Enum.flat_map(& &1)
     |> Enum.map(fn url -> Client.get_title(url) end)
     |> Enum.each(fn title -> Irc.send_to(irc, channel, title) end)
   end
