@@ -7,6 +7,7 @@ config = %Config {
   ssl: false,
 
   modules: [
+    {Omnibot.Contrib.Linkbot, channels: :all},
     {Omnibot.Contrib.Fortune, channels: ["#idleville"]},
   ],
 
