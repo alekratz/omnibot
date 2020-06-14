@@ -20,7 +20,6 @@ defmodule Omnibot.Supervisor do
     ]
 
     # TODO : how to handle config reloading?
-    # TODO : how to start up modules?
 
     # :one_for_all here because the RouterSupervisor and IRC server are co-dependent
     Supervisor.init(children, strategy: :one_for_all)
