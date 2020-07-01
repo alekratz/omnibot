@@ -29,6 +29,10 @@ defmodule Omnibot.MixProject do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [{:tesla, "~> 1.3.0"}]
+    # TODO : figure out how to make contrib modules optional (umbrella project?) and enable specific requirements
+    [
+      {:tesla, "~> 1.3.0"},   # Used by Omnibot.Contrib.Linkbot
+      {:sqlitex, "~> 1.7"},   # Used by Omnibot.Contrib.Wordbot
+    ]
   end
 end

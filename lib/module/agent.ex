@@ -18,7 +18,7 @@ defmodule Omnibot.Module.Agent do
 
       def update_state(update, timeout \\ 5000),
         do: Module.Agent.update_state(__MODULE__, update, timeout)
-    end
+      end
   end
 
   def start_link(cfg, state, opts) do

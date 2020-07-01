@@ -2,6 +2,7 @@ defmodule Omnibot.Supervisor do
   @moduledoc false
 
   use Supervisor
+  require IEx
 
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, :ok, opts)

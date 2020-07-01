@@ -1,4 +1,3 @@
-# REWRITE
 defmodule Omnibot.Irc do
   require Logger
   alias Omnibot.Irc.Msg

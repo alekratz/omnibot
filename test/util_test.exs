@@ -1,7 +1,7 @@
 alias Omnibot.Util
 
 defmodule Omnibot.UtilTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "string_empty?" do
     assert Util.string_empty?("")

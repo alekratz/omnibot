@@ -1,5 +1,5 @@
 defmodule LinkbotTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Omnibot.Contrib.Linkbot
 
