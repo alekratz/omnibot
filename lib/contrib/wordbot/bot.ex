@@ -62,12 +62,6 @@ defmodule Omnibot.Contrib.Wordbot.Bot do
     num_words = cfg[:words_per_round]
     duration = cfg[:hours_per_round] * 3600
     # Select words
-    # 
-    #
-    # TODO - the words being added to a new round takes a nontrivial amount of time for the default.
-    #        this isn't a huge deal, but it does seem to be stopping up the other bots from operating correctly.
-    #        figure out why this is the case.
-    #
     words = Enum.take_random(words(), num_words)
     # Try to start the round - if it's already running then that's OK
     case Wordbot.Db.start_round(channel, words, duration) do
