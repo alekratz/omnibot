@@ -10,7 +10,13 @@ defmodule Omnibot.Contrib.Wordbot.Bot do
   ## Bot commands
 
   command "!wordbot", ["leaderboard"] do
-    Irc.send_to(irc, channel, "leaderboard logic here")
+    Wordbot.Db.leaderboard(channel)
+    |> Enum.sort_by(& &1.score)
+    |> Enum.reverse()
+    |> Enum.take(5)
+    |> Enum.with_index()
+    |> Enum.map(fn {%{user: nick, score: score}, rank} -> "#{rank + 1}. #{nick}. #{score}" end)
+    |> Enum.each(&Irc.send_to(irc, channel, &1))
   end
 
   ## Client API
