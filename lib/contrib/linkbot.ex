@@ -18,6 +18,11 @@ defmodule Omnibot.Contrib.Linkbot do
     plug Tesla.Middleware.FollowRedirects, max_redirects: 10
     plug Tesla.Middleware.Compression, format: "gzip"
 
+    # TODO instead of checking for <title> exclusively, do this:
+    # 1. check for "meta" tag (in the header) with a "property" attribute of "og:title", and fetch the "content" attribute of that tag
+    # 2. check for meta tag with attribute "name" == "title", and fetch "content" attribute
+    # 3. Fall back to the <title>
+
     @title_regex ~r"<title>(?<title>.+)</title>"i
 
     def get_title(url) do
@@ -50,4 +55,5 @@ defmodule Omnibot.Contrib.Linkbot do
     |> Enum.map(fn url -> Client.get_title(url) end)
     |> Enum.each(fn title -> Irc.send_to(irc, channel, title) end)
   end
+
 end

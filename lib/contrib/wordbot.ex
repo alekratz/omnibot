@@ -5,7 +5,7 @@ defmodule Omnibot.Contrib.Wordbot do
 
   alias Omnibot.Contrib.Wordbot
 
-  @default_config wordbot_source: "words.txt", wordbot_db: "wordbot.db"
+  @default_config wordbot_source: "words.txt", wordbot_db: "wordbot.db", words_per_round: 300, hours_per_round: 5
 
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, opts[:cfg], opts)

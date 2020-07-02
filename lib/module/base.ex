@@ -44,7 +44,6 @@ defmodule Omnibot.Module.Base do
 
       defp route_msg(irc, msg) do
         nick = msg.prefix.nick
-
         case String.upcase(msg.command) do
           "PRIVMSG" ->
             [channel | params] = msg.params

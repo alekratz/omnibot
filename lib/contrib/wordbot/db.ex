@@ -68,14 +68,15 @@ defmodule Omnibot.Contrib.Wordbot.Db do
                bind: [start, end_, channel]
              ),
            {:ok, game_id} = game_id(channel) do
-        Enum.each(
-          words,
-          fn word ->
-            {:ok, _} =
-              Sqlitex.Server.query(__MODULE__, "INSERT INTO word (game, word) VALUES(?1, ?2)",
-                bind: [game_id, word]
-              )
-          end
+
+        # Much faster to just prepare everything in one go rather than enumerating all words
+        pattern = (0 .. length(words))
+          |> Enum.map(&"(?1, ?#{&1 + 1})")
+          |> Enum.join(", ")
+        Sqlitex.Server.query(
+          __MODULE__,
+          "INSERT INTO word (game, word) VALUES #{pattern}",
+          bind: [game_id | words]
         )
       end
       :ok
@@ -158,7 +159,7 @@ defmodule Omnibot.Contrib.Wordbot.Db do
   end
 
   def scores(channel) do
-    id = game_id!(channel)
+    {:ok, id} = last_game_id(channel)
     {:ok, rows} = Sqlitex.Server.query(
       __MODULE__,
       """
@@ -168,6 +169,20 @@ defmodule Omnibot.Contrib.Wordbot.Db do
       GROUP BY user
       """,
       bind: [id]
+    )
+    Enum.map(rows, &Map.new/1)
+  end
+
+  def leaderboard(channel) do
+    {:ok, rows} = Sqlitex.Server.query(
+      __MODULE__,
+      """
+      SELECT user, COUNT(score.id) AS score FROM score
+      JOIN game ON score.game = game.id
+      WHERE game.channel = ?1
+      GROUP BY user
+      """,
+      bind: [channel]
     )
     Enum.map(rows, &Map.new/1)
   end

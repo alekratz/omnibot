@@ -6,4 +6,12 @@ defmodule Omnibot.Util do
   def now_unix, do: now_unix("Etc/UTC")
 
   def now_unix(tz), do: DateTime.now!(tz) |> DateTime.to_unix()
+
+  @doc """
+  Inserts a zero-width space character inside of a nickname so that it won't
+  create a notification for that user.
+  """
+  def denotify_nick(nick) do
+    Enum.join(nick, "\u200b")
+  end
 end
