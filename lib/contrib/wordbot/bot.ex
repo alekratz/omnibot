@@ -2,7 +2,7 @@ defmodule Omnibot.Contrib.Wordbot.Bot do
   use Omnibot.Module.Base
   use Omnibot.Module.GenServer
 
-  alias Omnibot.{Contrib.Wordbot, Irc, State}
+  alias Omnibot.{Contrib.Wordbot, Irc, State, Util}
   require Logger
 
   @split_pattern ~r/[\s\b]+/
@@ -15,7 +15,7 @@ defmodule Omnibot.Contrib.Wordbot.Bot do
     |> Enum.reverse()
     |> Enum.take(5)
     |> Enum.with_index()
-    |> Enum.map(fn {%{user: nick, score: score}, rank} -> "#{rank + 1}. #{nick}. #{score}" end)
+    |> Enum.map(fn {%{user: nick, score: score}, rank} -> "#{rank + 1}. #{Util.denotify_nick(nick)}. #{score}" end)
     |> Enum.each(&Irc.send_to(irc, channel, &1))
   end
 
@@ -121,7 +121,7 @@ defmodule Omnibot.Contrib.Wordbot.Bot do
                |> Map.new()
                |> IO.inspect()
     
-    Enum.each(scores, &Irc.send_to(irc, channel, "#{rankings[&1.score] + 1}. #{&1.user}. #{&1.score}"))
+    Enum.each(scores, &Irc.send_to(irc, channel, "#{rankings[&1.score] + 1}. #{Util.denotify_nick(&1.user)}. #{&1.score}"))
 
     # Stop the watcher, start new round
     delete_watcher(channel)

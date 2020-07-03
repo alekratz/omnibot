@@ -12,6 +12,6 @@ defmodule Omnibot.Util do
   create a notification for that user.
   """
   def denotify_nick(nick) do
-    Enum.join(nick, "\u200b")
+    String.graphemes(nick) |> Enum.join("\u200b")
   end
 end
