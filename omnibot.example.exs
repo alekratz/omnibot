@@ -8,7 +8,7 @@ config = %Config {
 
   modules: [
     {Omnibot.Contrib.Linkbot, channels: :all},
-    {Omnibot.Contrib.Fortune, channels: ["#idleville"]},
+    {Omnibot.Contrib.Fortune, channels: :all},
     {Omnibot.Contrib.Wordbot, channels: ["#idleville"]},
   ],
 
