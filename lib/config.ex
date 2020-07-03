@@ -9,15 +9,15 @@ defmodule Omnibot.Config do
     real: "omnibot",
     port: 6667,
     ssl: false,
-    modules: [],
-    module_paths: []
+    plugins: [],
+    plugin_paths: []
   ]
 
   @doc ~S"""
-  Gets all channels that the bot should join via its modules.
+  Gets all channels that the bot should join via its plugins.
   """
   def all_channels(cfg) do
-    Enum.flat_map(cfg.modules, fn
+    Enum.flat_map(cfg.plugins, fn
       {_, [channels: :all]} -> []
       {_, [channels: channels]} -> channels
     end)

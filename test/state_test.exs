@@ -8,8 +8,8 @@ defmodule StateTest do
     {:ok, state: state}
   end
 
-  test "state channel_modules works correctly", %{state: state} do
-    modules = [
+  test "state channel_plugins works correctly", %{state: state} do
+    plugins = [
       {FooBar, channels: ["#foo", "#bar"]},
       {Foo, channels: ["#foo"]},
       {Bar, channels: ["#bar"]},
@@ -17,36 +17,36 @@ defmodule StateTest do
       {All, channels: :all},
     ]
 
-    modules |> Enum.each(fn module -> State.add_loaded_module(state, module) end)
+    plugins |> Enum.each(fn plugin -> State.add_loaded_plugin(state, plugin) end)
 
-    modules = State.channel_modules(state, "#foo")
-              |> Enum.map(fn {module, _} -> module end)
-    assert length(modules) == 3
-    assert Enum.member?(modules, FooBar)
-    assert Enum.member?(modules, Foo)
-    assert Enum.member?(modules, All)
+    plugins = State.channel_plugins(state, "#foo")
+              |> Enum.map(fn {plugin, _} -> plugin end)
+    assert length(plugins) == 3
+    assert Enum.member?(plugins, FooBar)
+    assert Enum.member?(plugins, Foo)
+    assert Enum.member?(plugins, All)
 
-    modules = State.channel_modules(state, "#bar")
-              |> Enum.map(fn {module, _} -> module end)
-    assert length(modules) == 3
-    assert Enum.member?(modules, FooBar)
-    assert Enum.member?(modules, Bar)
-    assert Enum.member?(modules, All)
+    plugins = State.channel_plugins(state, "#bar")
+              |> Enum.map(fn {plugin, _} -> plugin end)
+    assert length(plugins) == 3
+    assert Enum.member?(plugins, FooBar)
+    assert Enum.member?(plugins, Bar)
+    assert Enum.member?(plugins, All)
 
-    modules = State.channel_modules(state, "#baz")
-              |> Enum.map(fn {module, _} -> module end)
-    assert length(modules) == 2
-    assert Enum.member?(modules, Baz)
-    assert Enum.member?(modules, All)
+    plugins = State.channel_plugins(state, "#baz")
+              |> Enum.map(fn {plugin, _} -> plugin end)
+    assert length(plugins) == 2
+    assert Enum.member?(plugins, Baz)
+    assert Enum.member?(plugins, All)
 
-    modules = State.channel_modules(state, nil)
-              |> Enum.map(fn {module, _} -> module end)
-    assert length(modules) == 1
-    assert Enum.member?(modules, All)
+    plugins = State.channel_plugins(state, nil)
+              |> Enum.map(fn {plugin, _} -> plugin end)
+    assert length(plugins) == 1
+    assert Enum.member?(plugins, All)
   end
 
   test "state all_channels works correctly", %{state: state} do
-    modules = [
+    plugins = [
       {FooBar, channels: ["#foo", "#bar"]},
       {Foo, channels: ["#foo"]},
       {Bar, channels: ["#bar"]},
@@ -54,7 +54,7 @@ defmodule StateTest do
       {All, channels: :all},
     ]
 
-    modules |> Enum.each(fn module -> State.add_loaded_module(state, module) end)
+    plugins |> Enum.each(fn plugin -> State.add_loaded_plugin(state, plugin) end)
     channels = State.all_channels(state)
 
     assert length(channels) == 3

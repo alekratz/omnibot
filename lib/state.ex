@@ -2,7 +2,7 @@ defmodule Omnibot.State do
   use GenServer
 
   @enforce_keys [:cfg]
-  defstruct [:cfg, channels: MapSet.new(), module_map: %{}]
+  defstruct [:cfg, channels: MapSet.new(), plugin_map: %{}]
 
   ## Client API
 
@@ -21,25 +21,25 @@ defmodule Omnibot.State do
     GenServer.call(state, :cfg)
   end
 
-  @doc "Adds a loaded module to the default state."
-  def add_loaded_module(module), do: add_loaded_module(__MODULE__, module)
+  @doc "Adds a loaded plugin to the default state."
+  def add_loaded_plugin(plugin), do: add_loaded_plugin(__MODULE__, plugin)
 
-  @doc "Adds a loaded module to the given state."
-  def add_loaded_module(state, {module, cfg}), do: GenServer.cast(state, {:add_loaded_module, {module, cfg}})
+  @doc "Adds a loaded plugin to the given state."
+  def add_loaded_plugin(state, {plugin, cfg}), do: GenServer.cast(state, {:add_loaded_plugin, {plugin, cfg}})
 
-  @doc "Adds a loaded module to the given state."
-  def add_loaded_module(state, module), do: add_loaded_module(state, {module, []})
+  @doc "Adds a loaded plugin to the given state."
+  def add_loaded_plugin(state, plugin), do: add_loaded_plugin(state, {plugin, []})
 
-  @doc "Gets all loaded modules from the default state."
-  def loaded_modules(), do: loaded_modules(__MODULE__)
+  @doc "Gets all loaded plugins from the default state."
+  def loaded_plugins(), do: loaded_plugins(__MODULE__)
 
-  @doc "Gets all loaded modules from the given state."
-  def loaded_modules(state), do: GenServer.call(state, :loaded_modules)
+  @doc "Gets all loaded plugins from the given state."
+  def loaded_plugins(state), do: GenServer.call(state, :loaded_plugins)
 
   def all_channels(), do: all_channels(__MODULE__)
 
   def all_channels(state) do
-    loaded_modules(state) |> Enum.flat_map(
+    loaded_plugins(state) |> Enum.flat_map(
       fn {_, cfg} ->
         case cfg[:channels] do
           :all -> []
@@ -51,14 +51,14 @@ defmodule Omnibot.State do
       |> MapSet.to_list()
   end
 
-  def channel_modules(channel), do: channel_modules(__MODULE__, channel)
+  def channel_plugins(channel), do: channel_plugins(__MODULE__, channel)
 
   @doc ~S"""
-  Gets a list of all `{module, mod_cfg}` from the given State that are both
+  Gets a list of all `{plugin, plug_cfg}` from the given State that are both
   loaded, and listening to the given channel.
   """
-  def channel_modules(state, channel) do
-    loaded_modules(state) |> Enum.filter(
+  def channel_plugins(state, channel) do
+    loaded_plugins(state) |> Enum.filter(
       fn {_, cfg} ->
         cfg[:channels] == :all or Enum.member?(cfg[:channels] || [], channel)
       end)
@@ -77,13 +77,13 @@ defmodule Omnibot.State do
   end
 
   @impl true
-  def handle_call(:loaded_modules, _from, state) do
-    {:reply, state.module_map, state}
+  def handle_call(:loaded_plugins, _from, state) do
+    {:reply, state.plugin_map, state}
   end
 
   @impl true
-  def handle_cast({:add_loaded_module, {module, cfg}}, state) do
-    state = %{state | module_map: Map.put(state.module_map, module, cfg)}
+  def handle_cast({:add_loaded_plugin, {plugin, cfg}}, state) do
+    state = %{state | plugin_map: Map.put(state.plugin_map, plugin, cfg)}
     {:noreply, state}
   end
 end

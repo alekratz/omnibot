@@ -11,42 +11,42 @@ defmodule Omnibot.PluginSupervisor do
 
   @impl true
   def init(cfg) do
-    compile_files(cfg.module_paths || [])
+    compile_files(cfg.plugin_paths || [])
 
-    # These are modules that need to be loaded for core functionality of the bot
+    # These are plugins that need to be loaded for core functionality of the bot
     core = [
       Omnibot.Core
     ]
 
-    # Map the modules in the configuration to the children
+    # Map the plugins in the configuration to the children
     children =
-      for mod <- (core ++ cfg.modules) do
-        case mod do
+      for plug <- (core ++ cfg.plugins) do
+        case plug do
           {name, cfg} -> {name, cfg: cfg ++ name.default_config(), name: name}
           name -> {name, cfg: name.default_config(), name: name}
         end
       end
 
-    # Add each child to the "loaded modules" list in the State
-    Enum.each(children, fn {module, opts} -> State.add_loaded_module({module, opts[:cfg]}) end)
+    # Add each child to the "loaded plugins" list in the State
+    Enum.each(children, fn {plugin, opts} -> State.add_loaded_plugin({plugin, opts[:cfg]}) end)
 
     Supervisor.init(children, strategy: :one_for_one)
   end
 
   defp compile_files([]), do: nil
 
-  defp compile_files([{path, opts} | module_paths]) do
+  defp compile_files([{path, opts} | plugin_paths]) do
     case {File.exists?(path), File.dir?(path)} do
       {_, true} -> compile_dir(path, opts[:recurse] || false)
       {true, false} -> Code.require_file(path)
-      {_, _} -> Logger.error("module path '#{path}' does not exist, it will not be loaded")
+      {_, _} -> Logger.error("plugin path '#{path}' does not exist, it will not be loaded")
     end
 
-    compile_files(module_paths)
+    compile_files(plugin_paths)
   end
 
-  defp compile_files([path | module_paths]) do
-    compile_files([{path, []} | module_paths])
+  defp compile_files([path | plugin_paths]) do
+    compile_files([{path, []} | plugin_paths])
   end
 
   defp compile_dir(path, recurse) do

@@ -28,12 +28,12 @@ defmodule Omnibot.Irc do
   def part(irc, channel), do: send_msg(irc, "PART", channel)
 
   defp route_msg(irc, msg) do
-    modules = Msg.channel(msg) |> State.channel_modules()
+    plugins = Msg.channel(msg) |> State.channel_plugins()
 
     Task.Supervisor.async_stream_nolink(
       Omnibot.RouterSupervisor,
-      modules,
-      fn {module, _mod_cfg} -> module.on_msg(irc, msg) end,
+      plugins,
+      fn {plugin, _plug_cfg} -> plugin.on_msg(irc, msg) end,
       timeout: 30_000,
       on_timeout: :kill_task
     ) |> Stream.run()

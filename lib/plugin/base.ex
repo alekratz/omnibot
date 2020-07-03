@@ -37,7 +37,7 @@ defmodule Omnibot.Plugin.Base do
 
       @impl Plugin.Base
       def on_msg(irc, msg) do
-        # TODO - instead of using a router for modules, consider using a PubSub with a Registry:
+        # TODO - instead of using a router for plugins, consider using a PubSub with a Registry:
         # https://hexdocs.pm/elixir/master/Registry.html#module-using-as-a-pubsub
         route_msg(irc, msg)
       end
