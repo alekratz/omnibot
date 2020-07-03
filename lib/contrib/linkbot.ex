@@ -19,24 +19,27 @@ defmodule Omnibot.Contrib.Linkbot do
     plug Tesla.Middleware.FollowRedirects, max_redirects: 10
     plug Tesla.Middleware.Compression, format: "gzip"
 
-    # TODO instead of checking for <title> exclusively, do this:
-    # 1. check for "meta" tag (in the header) with a "property" attribute of "og:title", and fetch the "content" attribute of that tag
-    # 2. check for meta tag with attribute "name" == "title", and fetch "content" attribute
-    # 3. Fall back to the <title>
 
     @title_regex ~r"<title>(?<title>.+)</title>"i
 
     def get_title(url) do
+      # 1. check for "meta" tag (in the header) with a "property" attribute of "og:title", and fetch the "content" attribute of that tag
+      # 2. check for meta tag with attribute "name" == "title", and fetch "content" attribute
+      # 3. Fall back to the <title>
+      
       html = get_url(url)
       document = Meeseeks.parse(html)
-      [title | _] = (Meeseeks.all(document, css("meta")) ++ [Meeseeks.one(document, css("title"))])
-                    |> Enum.map(&(
-                      Meeseeks.attr(&1, "property") == "og:title" && Meeseeks.attr(&1, "content")
-                      || Meeseeks.attr(&1, "name") == "title" && Meeseeks.attr(&1, "content")
-                      || Meeseeks.tag(&1) == "title" && Meeseeks.text(&1)
-                    ))
-                    |> Enum.filter(& &1)
-
+      [title | _] =
+        # Get all meta tags and the title tag in a single list
+        (Meeseeks.all(document, css("meta")) ++ [Meeseeks.one(document, css("title"))])
+        # Filter/map appropriately
+        |> Enum.map(
+          &((Meeseeks.attr(&1, "property") == "og:title" && Meeseeks.attr(&1, "content")) ||
+              (Meeseeks.attr(&1, "name") == "title" && Meeseeks.attr(&1, "content")) ||
+              (Meeseeks.tag(&1) == "title" && Meeseeks.text(&1)))
+        )
+        |> Enum.filter(& &1)
+      # Return the title
       title
     end
 
