@@ -13,6 +13,7 @@ defmodule Omnibot.Contrib.Linkbot do
   defmodule Client do
     use Tesla
     alias Omnibot.Contrib.Linkbot
+    import Meeseeks.CSS
 
     plug Tesla.Middleware.Headers, [{"user-agent", "Tesla/Omnibot"}]
     plug Tesla.Middleware.FollowRedirects, max_redirects: 10
@@ -26,11 +27,23 @@ defmodule Omnibot.Contrib.Linkbot do
     @title_regex ~r"<title>(?<title>.+)</title>"i
 
     def get_title(url) do
+      html = get_url(url)
+      document = Meeseeks.parse(html)
+      [title | _] = (Meeseeks.all(document, css("meta")) ++ [Meeseeks.one(document, css("title"))])
+                    |> Enum.map(&(
+                      Meeseeks.attr(&1, "property") == "og:title" && Meeseeks.attr(&1, "content")
+                      || Meeseeks.attr(&1, "name") == "title" && Meeseeks.attr(&1, "content")
+                      || Meeseeks.tag(&1) == "title" && Meeseeks.text(&1)
+                    ))
+                    |> Enum.filter(& &1)
+
+      title
+    end
+
+    defp get_url(url) do
       if should_get?(url) do
         Logger.info("Fetching #{url}")
-        resp = get!(url)
-        %{"title" => title} = Regex.named_captures(@title_regex, resp.body)
-        title
+        get!(url).body
       end
     end
 
@@ -53,6 +66,7 @@ defmodule Omnibot.Contrib.Linkbot do
     Regex.scan(@url_regex, line)
     |> Enum.flat_map(& &1)
     |> Enum.map(fn url -> Client.get_title(url) end)
+    |> Enum.filter(& &1)
     |> Enum.each(fn title -> Irc.send_to(irc, channel, title) end)
   end
 
