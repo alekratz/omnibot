@@ -70,8 +70,8 @@ defmodule Omnibot.Contrib.Wordbot.Db do
            {:ok, game_id} = game_id(channel) do
 
         # Much faster to just prepare everything in one go rather than enumerating all words
-        pattern = (0 .. length(words))
-          |> Enum.map(&"(?1, ?#{&1 + 1})")
+        pattern = (0 .. length(words) - 1)
+          |> Enum.map(&"(?1, ?#{&1 + 2})")
           |> Enum.join(", ")
         Sqlitex.Server.query(
           __MODULE__,
