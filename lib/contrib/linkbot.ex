@@ -1,5 +1,5 @@
 defmodule Omnibot.Contrib.Linkbot do
-  use Omnibot.Module
+  use Omnibot.Plugin
   require Logger
 
   @default_config timeout: 30_000
@@ -18,9 +18,6 @@ defmodule Omnibot.Contrib.Linkbot do
     plug Tesla.Middleware.Headers, [{"user-agent", "Tesla/Omnibot"}]
     plug Tesla.Middleware.FollowRedirects, max_redirects: 10
     plug Tesla.Middleware.Compression, format: "gzip"
-
-
-    @title_regex ~r"<title>(?<title>.+)</title>"i
 
     def get_title(url) do
       # 1. check for "meta" tag (in the header) with a "property" attribute of "og:title", and fetch the "content" attribute of that tag

@@ -1,6 +1,6 @@
 defmodule Omnibot.Contrib.Wordbot.Bot do
-  use Omnibot.Module.Base
-  use Omnibot.Module.GenServer
+  use Omnibot.Plugin.Base
+  use Omnibot.Plugin.GenServer
 
   alias Omnibot.{Contrib.Wordbot, Irc, State, Util}
   require Logger
@@ -128,7 +128,7 @@ defmodule Omnibot.Contrib.Wordbot.Bot do
     start_round(irc, channel)
   end
 
-  ## Module callbacks
+  ## Plugin callbacks
 
   @impl true
   def on_init(cfg) do
