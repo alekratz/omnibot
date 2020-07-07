@@ -42,6 +42,8 @@ defmodule Omnibot.Plugin.Base do
         route_msg(irc, msg)
       end
 
+      defp route_msg(irc, %Irc.Msg {prefix: nil}), do: nil
+
       defp route_msg(irc, msg) do
         nick = msg.prefix.nick
         case String.upcase(msg.command) do
