@@ -6,7 +6,11 @@ config = %Config {
   port: 6667,
   ssl: false,
 
-  modules: [
+  plugins: [
+    {Omnibot.Contrib.OnConnect, commands: [
+      ["privmsg", "nickserv", "register", "password123", "omnibot@omni.bot"],
+      ["privmsg", "nickserv", "identify", "password123"]
+    ]},
     {Omnibot.Contrib.Linkbot, channels: :all},
     {Omnibot.Contrib.Fortune, channels: :all},
     {Omnibot.Contrib.Wordbot, channels: ["#idleville"]},
