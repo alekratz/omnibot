@@ -14,4 +14,26 @@ defmodule Omnibot.Util do
   def denotify_nick(nick) do
     String.graphemes(nick) |> Enum.join("\u200b")
   end
+
+  def binary_search([], _key) do
+    nil
+  end
+
+  def binary_search([{key, value} | _], key) do
+    {0, value}
+  end
+
+  @doc "Attempts to find to find the given key in a sorted associative array."
+  def binary_search(list, key) do
+    {head, tail} = Enum.split(list, trunc(length(list) / 2))
+    [{mid, _} | _] = tail
+    if key < mid do
+      binary_search(head, key)
+    else
+      case binary_search(tail, key) do
+        nil -> nil
+        {index, item} -> {index + length(head), item}
+      end
+    end
+  end
 end
