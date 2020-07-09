@@ -1,30 +1,28 @@
 defmodule Omnibot.Plugin.Base do
-  defmodule Hooks do
-    defmacro __before_compile__(_env) do
-      quote generated: true do
-        @impl true
-        def on_channel_msg(_irc, _channel, _nick, _line), do: nil
+  defmacro __before_compile__(_env) do
+    quote generated: true do
+      @impl true
+      def on_channel_msg(_irc, _channel, _nick, _line), do: nil
 
-        @impl true
-        def on_channel_msg(_irc, _channel, _nick, _cmd, _params), do: nil
+      @impl true
+      def on_channel_msg(_irc, _channel, _nick, _cmd, _params), do: nil
 
-        @impl true
-        def on_join(_irc, _channel, _nick), do: nil
+      @impl true
+      def on_join(_irc, _channel, _nick), do: nil
 
-        @impl true
-        def on_part(_irc, _channel, _nick), do: nil
+      @impl true
+      def on_part(_irc, _channel, _nick), do: nil
 
-        @impl true
-        def on_kick(_irc, _channel, _nick, _target), do: nil
+      @impl true
+      def on_kick(_irc, _channel, _nick, _target), do: nil
 
-        @impl true
-        def on_init(_cfg), do: nil
+      @impl true
+      def on_init(_cfg), do: nil
 
-        @impl true
-        def default_config(), do: @default_config
+      @impl true
+      def default_config(), do: @default_config
 
-        def commands(), do: MapSet.to_list(@commands)
-      end
+      def commands(), do: MapSet.to_list(@commands)
     end
   end
 
@@ -37,8 +35,6 @@ defmodule Omnibot.Plugin.Base do
 
       @impl Plugin.Base
       def on_msg(irc, msg) do
-        # TODO - instead of using a router for plugins, consider using a PubSub with a Registry:
-        # https://hexdocs.pm/elixir/master/Registry.html#module-using-as-a-pubsub
         route_msg(irc, msg)
       end
 
@@ -79,7 +75,7 @@ defmodule Omnibot.Plugin.Base do
 
       @commands MapSet.new()
       @default_config []
-      @before_compile Omnibot.Plugin.Base.Hooks
+      @before_compile Omnibot.Plugin.Base
     end
   end
 
