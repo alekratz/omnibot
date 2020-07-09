@@ -10,7 +10,9 @@ defmodule Omnibot.Supervisor do
 
   @impl true
   def init(:ok) do
-    {_, bindings} = Code.eval_file("omnibot.exs")
+    
+    {_, bindings} = System.get_env("OMNIBOT_CFG", "omnibot.exs")
+                    |> Code.eval_file()
     cfg = bindings[:config]
 
     children = [

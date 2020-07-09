@@ -25,7 +25,6 @@ defmodule MarkovChainTest do
     ]
 
     chain = chain |> Chain.add_weight(["foo", "bar"], "qux")
-
     assert chain.chain == [
       {["foo", "bar"], %{"baz" => 3, "qux" => 1}}
     ]

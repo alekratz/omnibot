@@ -4,6 +4,10 @@ defmodule Omnibot.Contrib.Markov.Chain do
   @enforce_keys [:order]
   defstruct order: 2, chain: []
 
+  def train(chain, line) when is_binary(line) do
+    train(chain, line |> String.split(~r/\s+/))
+  end
+
   def train(chain, words) when is_list(words) do
     order = chain.order
 
@@ -12,21 +16,11 @@ defmodule Omnibot.Contrib.Markov.Chain do
     |> Enum.reduce(chain, &case Enum.split(&1, order) do
       {words, []} -> if length(words) == order,
           # Null case for the chain; this is an "end" state
-          do: add_weight(&2, words, nil)
-          # else: TODO ? train [a, nil] -> b ?
-      {words, [next]} ->
-        add_weight(&2, words, next)
-    end
-    )
+          do: add_weight(&2, words, nil),
+          else: &2 # TODO ? train [a, nil] -> b ?
+      {words, [next]} -> add_weight(&2, words, next)
+    end)
   end
-
-  #def lookup(%Chain {chain: chain, order: order}, key) do
-  #  if length(key) != order, do: raise(ArgumentError, message: "invalid key (length #{length(key)} vs. order #{order})")
-  #  case Util.binary_search(chain, key) do
-  #    {_index, value} -> value[word]
-  #    nil -> nil
-  #  end
-  #end
 
   def add_weight(%Chain {chain: chain, order: order}, key, word, increment \\ 1) do
     if length(key) != order, do: raise(ArgumentError, message: "invalid key (length #{length(key)} vs. order #{order})")
