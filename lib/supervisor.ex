@@ -18,7 +18,7 @@ defmodule Omnibot.Supervisor do
     children = [
       {Task.Supervisor, name: Omnibot.RouterSupervisor, strategy: :one_for_one},
       {Omnibot.State, cfg: cfg, name: Omnibot.State},
-      {Omnibot.Plugin.Supervisor, cfg: cfg, name: Omnibot.Plugin.Supervisor},
+      {Omnibot.PluginSupervisor, cfg: cfg, name: Omnibot.PluginSupervisor},
     ] ++ unless IEx.started?(),
       do: [{Omnibot.Irc, name: Omnibot.Irc}],
       else: []
