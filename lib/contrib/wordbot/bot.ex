@@ -1,6 +1,5 @@
 defmodule Omnibot.Contrib.Wordbot.Bot do
-  use Omnibot.Plugin.Base
-  use Omnibot.Plugin.GenServer
+  use Omnibot.Plugin
 
   alias Omnibot.{Contrib.Wordbot, Irc, State, Util}
   require Logger

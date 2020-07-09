@@ -1,46 +1,32 @@
 defmodule Omnibot.Contrib.Markov do
-  use Omnibot.Plugin
+  use Omnibot.Plugin.Base
+  alias Omnibot.Contrib.Markov
+  use Supervisor
 
-  alias Omnibot.Contrib.Markov.Chain
+  @default_config path: "markov", order: 2, save_every: 5 * 60
 
-  @default_config path: "markov", order: 2
-
-  @impl true
-  def on_init(cfg) do
-    # Create the markov database
-    path = String.to_atom(cfg[:path])
-    :ets.new(path, [:public])
+  def start_link(opts) do
+    Supervisor.start_link(__MODULE__, opts[:cfg], opts)
   end
 
   @impl true
-  def on_channel_msg(_irc, channel, nick, msg) do
-    train(channel, nick, msg)
+  def init(cfg) do
+    children = [
+      {Markov.Bot, cfg: cfg, name: Omnibot.Contrib.Markov.Bot},
+      {Task, fn -> save_loop(cfg) end}
+    ]
+    Supervisor.init(children, strategy: :one_for_all)
   end
 
-  def train(channel, user, msg) do
-    chain = (user_chain(channel, user) || create_user_chain(channel, user))
-            |> Chain.train(msg)
-    true = update_user_chain(channel, user, chain)
+  defp save_loop(cfg) do
+    save_every = cfg[:save_every]
+    Process.sleep(save_every * 1000)
+    Markov.Bot.save_chains()
   end
 
-  def user_chain(channel, user) do
-    db = state()
-    case :ets.lookup(db, {channel, user}) do
-      [] -> nil
-      [{{^channel, ^user}, chains}] -> chains
-    end
-  end
+  @impl true
+  def on_msg(irc, msg), do: Markov.Bot.on_msg(irc, msg)
 
-  def update_user_chain(channel, user, chain) do
-    db = state()
-    case user_chain(channel, user) do
-      nil -> :ets.insert_new(db, {{channel, user}, chain})
-      chain -> :ets.insert(db, {{channel, user}, chain})
-    end
-  end
-
-  defp create_user_chain(channel, user) do
-    true = update_user_chain(channel, user, %Chain{order: cfg()[:order]})
-    user_chain(channel, user)
-  end
+  @impl true
+  def on_channel_msg(irc, channel, nick, msg), do: Markov.Bot.on_channel_msg(irc, channel, nick, msg)
 end
