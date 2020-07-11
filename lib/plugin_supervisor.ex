@@ -15,7 +15,7 @@ defmodule Omnibot.PluginSupervisor do
 
     # These are plugins that need to be loaded for core functionality of the bot
     core = [
-      Omnibot.Core
+      Omnibot.Core,
     ]
 
     # Map the plugins in the configuration to the children

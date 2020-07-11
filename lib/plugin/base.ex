@@ -79,6 +79,7 @@ defmodule Omnibot.Plugin.Base do
     end
   end
 
+  #@callback handle_msg(irc :: pid(), msg :: %Omnibot.Irc.Msg{}) :: any
   @callback on_msg(irc :: pid(), msg :: %Omnibot.Irc.Msg{}) :: any
   @callback on_channel_msg(irc :: pid(), channel :: String.t(), nick :: String.t(), line :: String.t()) :: any
   @callback on_channel_msg(
