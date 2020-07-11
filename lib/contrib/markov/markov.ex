@@ -6,9 +6,9 @@ defmodule Omnibot.Contrib.Markov do
   @default_config path: "markov", order: 2, save_every: 5 * 60
 
   @impl true
-  def children(_cfg, _state) do
+  def children(cfg, _state) do
     [{Task, fn ->
-      Stream.timer(1000)
+      Stream.timer(cfg[:save_every] * 1000)
       |> Stream.cycle()
       |> Stream.each(fn _ -> save_chains() end)
       |> Stream.run()

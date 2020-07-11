@@ -1,7 +1,7 @@
 defmodule Omnibot.Plugin.GenServer do
   defmacro __using__([]) do
     quote do
-      alias Omnibot.Plugin
+      use Omnibot.Plugin.Base
       use GenServer 
 
       def start_link(opts) do

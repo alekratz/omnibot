@@ -1,5 +1,5 @@
 defmodule Omnibot.Core do
-  use Omnibot.Plugin
+  use Omnibot.Plugin.GenServer
   alias Omnibot.State
 
   @default_config [channels: :all]
