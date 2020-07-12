@@ -1,5 +1,5 @@
 defmodule Omnibot.Contrib.Linkbot do
-  use Omnibot.Plugin.GenServer
+  use Omnibot.Plugin
   require Logger
 
   @default_config timeout: 30_000

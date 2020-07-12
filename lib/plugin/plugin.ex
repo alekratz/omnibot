@@ -1,4 +1,4 @@
-defmodule Omnibot.Plugin.Supervisor do
+defmodule Omnibot.Plugin do
   @default_opts [include_base: true, opts: [strategy: :one_for_one]]
 
   defmodule CfgState do
@@ -32,31 +32,44 @@ defmodule Omnibot.Plugin.Supervisor do
       end
 
       def cfg() do
-        Omnibot.Plugin.Supervisor.CfgState.cfg(__MODULE__.CfgState)
+        Omnibot.Plugin.CfgState.cfg(__MODULE__.CfgState)
       end
 
       def state() do
-        Omnibot.Plugin.Supervisor.CfgState.state(__MODULE__.CfgState)
+        Omnibot.Plugin.CfgState.state(__MODULE__.CfgState)
       end
 
       def update_state(fun) do
-        Omnibot.Plugin.Supervisor.CfgState.update_state(__MODULE__.CfgState, fun)
+        Omnibot.Plugin.CfgState.update_state(__MODULE__.CfgState, fun)
       end
+
+      @impl Omnibot.Plugin.Base
+      def handle_msg(irc, msg) do
+        GenServer.cast(__MODULE__, {:handle_msg, irc, msg})
+      end
+
+      @impl Omnibot.Plugin
+      def children(_cfg, _state), do: []
 
       ## Server callbacks
 
       @impl Supervisor
       def init({cfg, state}) do
-
         base_children = [
-          {Omnibot.Plugin.Supervisor.CfgState, cfg: cfg, state: state, name: __MODULE__.CfgState},
+          {Omnibot.Plugin.CfgState, cfg: cfg, state: state, name: __MODULE__.CfgState},
         ]
         children = 
           (if unquote(opts[:include_base]), do: base_children, else: []) ++ children(cfg, state)
         Supervisor.init(children, unquote(opts[:opts]))
       end
 
-      @behaviour Omnibot.Plugin.Supervisor
+      def handle_cast({:handle_msg, irc, msg}, state) do
+        on_msg(irc, msg)
+        {:noreply, state}
+      end
+
+      @behaviour Omnibot.Plugin
+      defoverridable Omnibot.Plugin
     end
   end
 

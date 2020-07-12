@@ -1,5 +1,5 @@
 defmodule Omnibot.Contrib.Markov do
-  use Omnibot.Plugin.Supervisor
+  use Omnibot.Plugin
   alias Omnibot.Contrib.Markov.Chain
   require Logger
 

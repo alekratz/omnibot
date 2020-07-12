@@ -1,5 +1,5 @@
 defmodule Omnibot.Contrib.Wordbot do
-  use Omnibot.Plugin.Supervisor
+  use Omnibot.Plugin
   alias Omnibot.{Contrib.Wordbot, State, Util}
   require Logger
 

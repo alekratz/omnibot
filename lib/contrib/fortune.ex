@@ -1,5 +1,5 @@
 defmodule Omnibot.Contrib.Fortune do
-  use Omnibot.Plugin.GenServer
+  use Omnibot.Plugin
 
   @fortunes [
     "Reply hazy, try again",

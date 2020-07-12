@@ -33,7 +33,8 @@ defmodule Omnibot.Irc do
     Task.Supervisor.async_stream_nolink(
       Omnibot.RouterSupervisor,
       plugins,
-      fn {plugin, _plug_cfg} -> plugin.on_msg(irc, msg) end,
+      # Spin up tasks to handle messages in case handle_msg() hangs
+      fn {plugin, _plug_cfg} -> plugin.handle_msg(irc, msg) end,
       timeout: 30_000,
       on_timeout: :kill_task
     ) |> Stream.run()
