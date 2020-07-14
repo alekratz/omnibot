@@ -21,14 +21,15 @@ defmodule Omnibot.PluginSupervisor do
     # Map the plugins in the configuration to the children
     children =
       for plug <- (core ++ cfg.plugins) do
-        case plug do
-          {name, cfg} -> {name, cfg: cfg ++ name.default_config(), name: name}
-          name -> {name, cfg: name.default_config(), name: name}
+        {name, cfg} = case plug do
+          {name, cfg} -> {name, cfg ++ name.default_config()}
+          name -> {name, name.default_config()}
         end
+        {Omnibot.Plugin.Supervisor, plugin: name, cfg: cfg}
       end
 
     # Add each child to the "loaded plugins" list in the State
-    Enum.each(children, fn {plugin, opts} -> State.add_loaded_plugin({plugin, opts[:cfg]}) end)
+    Enum.each(children, fn {_plugin, opts} -> State.add_loaded_plugin({opts[:plugin], opts[:cfg]}) end)
 
     Supervisor.init(children, strategy: :one_for_one)
   end

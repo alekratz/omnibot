@@ -5,23 +5,8 @@ defmodule Omnibot.Contrib.Wordbot do
 
   @default_config wordbot_source: "words.txt", wordbot_db: "wordbot.db", words_per_round: 300, hours_per_round: 5
 
-  #def start_link(opts) do
-    #Supervisor.start_link(__MODULE__, opts[:cfg], opts)
-  #end
-
-  #@impl true
-  #def init(cfg) do
-  #  children = [
-  #    {Task.Supervisor, name: Omnibot.Contrib.Wordbot.Watchers, strategy: :one_for_one},
-  #    Wordbot.Db.child_spec(cfg[:wordbot_db]),
-  #    {Wordbot.Bot, cfg: cfg, name: Omnibot.Contrib.Wordbot.Bot},
-  #  ]
-
-  #  Supervisor.init(children, strategy: :one_for_all)
-  #end
-
   @impl true
-  def children(cfg, _state) do
+  def children(cfg) do
     [
       {Task.Supervisor, name: Omnibot.Contrib.Wordbot.Watchers, strategy: :one_for_one},
       Wordbot.Db.child_spec(cfg[:wordbot_db]),

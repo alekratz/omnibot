@@ -20,6 +20,11 @@ defmodule Omnibot.Plugin.Base do
       def on_init(_cfg), do: nil
 
       @impl true
+      def on_msg(irc, msg) do
+        route_msg(irc, msg)
+      end
+
+      @impl true
       def default_config(), do: @default_config
 
       def commands(), do: MapSet.to_list(@commands)
@@ -32,11 +37,6 @@ defmodule Omnibot.Plugin.Base do
       import Omnibot.Plugin.Base
 
       @behaviour Plugin.Base
-
-      @impl Plugin.Base
-      def on_msg(irc, msg) do
-        route_msg(irc, msg)
-      end
 
       defp route_msg(irc, %Irc.Msg {prefix: nil}), do: nil
 

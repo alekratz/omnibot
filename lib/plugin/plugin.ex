@@ -14,21 +14,24 @@ defmodule Omnibot.Plugin do
 
     def state(pid), do: Agent.get(pid, fn {_, state} -> state end)
 
-    def update_state(pid, fun, timeout \\ 5000),
-      do: Agent.update(pid, &{&1, apply(fun, [&1])}, timeout)
+    def update_state(pid, fun, timeout \\ 5000) do
+      Agent.update(pid, fn {cfg, state} -> {cfg, apply(fun, [state])} end, timeout)
+      #Agent.update(pid, &{&1, apply(fun, [&1])}, timeout)
+    end
   end
 
   defmacro __using__(opts) do
     opts = opts ++ @default_opts
 
-    quote do
-      use Supervisor
+    quote generated: true do
+      use GenServer
       use Omnibot.Plugin.Base
 
       ## Client API
 
       def start_link(opts) do
-        Supervisor.start_link(__MODULE__, {opts[:cfg], opts[:state]}, opts)
+        {cfg, opts} = Keyword.pop(opts, :cfg)
+        GenServer.start_link(__MODULE__, cfg, opts)
       end
 
       def cfg() do
@@ -48,30 +51,37 @@ defmodule Omnibot.Plugin do
         GenServer.cast(__MODULE__, {:handle_msg, irc, msg})
       end
 
-      @impl Omnibot.Plugin
-      def children(_cfg, _state), do: []
-
       ## Server callbacks
 
-      @impl Supervisor
-      def init({cfg, state}) do
-        base_children = [
-          {Omnibot.Plugin.CfgState, cfg: cfg, state: state, name: __MODULE__.CfgState},
-        ]
-        children = 
-          (if unquote(opts[:include_base]), do: base_children, else: []) ++ children(cfg, state)
-        Supervisor.init(children, unquote(opts[:opts]))
+      @impl GenServer 
+      def init(_cfg) do
+        {:ok, nil}
       end
 
+      @impl GenServer
       def handle_cast({:handle_msg, irc, msg}, state) do
         on_msg(irc, msg)
         {:noreply, state}
       end
+
+      defp base_children(cfg, state) when unquote(opts[:include_base]) do
+        [
+          {Omnibot.Plugin.CfgState, cfg: cfg, state: state, name: __MODULE__.CfgState},
+          {__MODULE__, name: __MODULE__},
+        ]
+      end
+
+      defp base_children(_cfg, _state), do: []
+
+      @impl Omnibot.Plugin
+      def children(cfg), do: []
+
+      def plugin_children(cfg, state), do: base_children(cfg, state) ++ children(cfg)
 
       @behaviour Omnibot.Plugin
       defoverridable Omnibot.Plugin
     end
   end
 
-  @callback children(cfg :: [atom: any], state :: any) :: [atom | {atom, [atom: any]} | {atom, any, [atom: any]}]
+  @callback children(cfg :: [atom: any]) :: [atom | {atom, [atom: any]} | {atom, any, [atom: any]}]
 end
