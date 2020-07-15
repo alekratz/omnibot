@@ -1,28 +1,44 @@
 defmodule Omnibot.Contrib.Markov do
   use Omnibot.Plugin
-  alias Omnibot.Contrib.Markov.Chain
+  alias Omnibot.{Contrib.Markov.Chain, Util}
   require Logger
 
-  @default_config path: "markov", order: 2, save_every: 5 * 60
+  @default_config path: "markov.ets", order: 2, save_every: 5 * 60
+
+  command "!markov", ["force"] do
+    # Choose a random value from the sender
+    Irc.send_to(irc, channel, "TODO")
+  end
+
+  command "!markov", ["all"] do
+    Irc.send_to(irc, channel, "TODO")
+  end
+
+  command "!markov", ["status"] do
+    Irc.send_to(irc, channel, "TODO")
+  end
 
   @impl true
   def children(cfg) do
-    [{Task, fn ->
-      Stream.timer(cfg[:save_every] * 1000)
-      |> Stream.cycle()
-      |> Stream.each(fn _ -> save_chains() end)
-      |> Stream.run()
-    end}]
+    [
+      {Task, fn ->
+        Stream.timer(cfg[:save_every] * 1000)
+        |> Stream.cycle()
+        |> Stream.each(fn _ -> save_chains() end)
+        |> Stream.run()
+      end}
+    ]
   end
 
   @impl true
   def on_init(_cfg) do
     # Create the markov database
     path = String.to_atom(cfg()[:path])
-    {:ok, db} = :dets.open_file(path, [:named_table])
-    chains = :ets.new(:markov_chains, [:public])
+    {:ok, db} = :dets.open_file(path, [])
+    chains = :ets.new(:markov_chains, [:named_table, :public])
     :dets.to_ets(db, chains)
-    :dets.close(db)
+    :ok = :dets.close(db)
+    chains
   end
 
   @impl true
@@ -48,7 +64,7 @@ defmodule Omnibot.Contrib.Markov do
     db = state()
     case user_chain(channel, user) do
       nil -> :ets.insert_new(db, {{channel, user}, chain})
-      chain -> :ets.insert(db, {{channel, user}, chain})
+      _old_chain -> :ets.insert(db, {{channel, user}, chain})
     end
   end
 
@@ -58,7 +74,14 @@ defmodule Omnibot.Contrib.Markov do
   end
 
   def save_chains() do
-    # TODO
-    Logger.info("Saved markov chains")
+    start = Util.now_unix()
+    Logger.debug("Saving markov chains")
+
+    {:ok, db} = :dets.open_file(cfg()[:path], [])
+    :ets.to_dets(state(), db)
+    :ok = :dets.close(db)
+
+    stop = Util.now_unix()
+    Logger.info("Saved markov chains in #{stop - start} seconds")
   end
 end
