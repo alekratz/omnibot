@@ -127,7 +127,6 @@ defmodule Omnibot.Contrib.Wordbot do
                |> Enum.reverse()
                |> Enum.with_index()
                |> Map.new()
-               |> IO.inspect()
     
     Enum.each(scores, &Irc.send_to(irc, channel, "#{rankings[&1.score] + 1}. #{Util.denotify_nick(&1.user)}. #{&1.score}"))
 

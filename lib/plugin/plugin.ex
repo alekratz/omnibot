@@ -34,15 +34,15 @@ defmodule Omnibot.Plugin do
         GenServer.start_link(__MODULE__, cfg, opts)
       end
 
-      def cfg() do
+      def cfg() when unquote(opts[:include_base]) do
         Omnibot.Plugin.CfgState.cfg(__MODULE__.CfgState)
       end
 
-      def state() do
+      def state() when unquote(opts[:include_base]) do
         Omnibot.Plugin.CfgState.state(__MODULE__.CfgState)
       end
 
-      def update_state(fun) do
+      def update_state(fun) when unquote(opts[:include_base]) do
         Omnibot.Plugin.CfgState.update_state(__MODULE__.CfgState, fun)
       end
 
@@ -54,7 +54,13 @@ defmodule Omnibot.Plugin do
       ## Server callbacks
 
       @impl GenServer 
-      def init(_cfg) do
+      def init(cfg) do
+        # call on_init(cfg) for the plugin
+        state = on_init(cfg)
+        # If we know this plugin uses CfgState, then use that
+        if unquote(opts[:include_base]) do
+          Omnibot.Plugin.CfgState.update_state(__MODULE__.CfgState, fn _ -> state end)
+        end
         {:ok, nil}
       end
 
@@ -64,19 +70,22 @@ defmodule Omnibot.Plugin do
         {:noreply, state}
       end
 
-      defp base_children(cfg, state) when unquote(opts[:include_base]) do
-        [
-          {Omnibot.Plugin.CfgState, cfg: cfg, state: state, name: __MODULE__.CfgState},
-          {__MODULE__, name: __MODULE__},
-        ]
+      defp base_children_before(cfg) when unquote(opts[:include_base]) do
+        [{Omnibot.Plugin.CfgState, cfg: cfg, name: __MODULE__.CfgState}]
       end
 
-      defp base_children(_cfg, _state), do: []
+      defp base_children_after(cfg) when unquote(opts[:include_base]) do
+        [{__MODULE__, cfg: cfg, name: __MODULE__}]
+      end
+
+      defp base_children_before(_cfg), do: []
+
+      defp base_children_after(_cfg), do: []
 
       @impl Omnibot.Plugin
       def children(cfg), do: []
 
-      def plugin_children(cfg, state), do: base_children(cfg, state) ++ children(cfg)
+      def plugin_children(cfg), do: base_children_before(cfg) ++ children(cfg) ++ base_children_after(cfg)
 
       @behaviour Omnibot.Plugin
       defoverridable Omnibot.Plugin
