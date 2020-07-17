@@ -13,7 +13,7 @@ config = %Config {
     ]},
     {Omnibot.Contrib.Linkbot, channels: :all},
     {Omnibot.Contrib.Fortune, channels: :all},
-    {Omnibot.Contrib.Wordbot, channels: ["#idleville"]},
+    {Omnibot.Contrib.Wordbot, channels: ["#idleville"], ignore: ["username"]},
   ],
 
   #module_paths: [{"modules", recurse: true}]

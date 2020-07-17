@@ -3,7 +3,7 @@ defmodule Omnibot.Contrib.Wordbot do
   alias Omnibot.{Contrib.Wordbot, State, Util}
   require Logger
 
-  @default_config wordbot_source: "words.txt", wordbot_db: "wordbot.db", words_per_round: 300, hours_per_round: 5
+  @default_config wordbot_source: "words.txt", wordbot_db: "wordbot.db", words_per_round: 300, hours_per_round: 5, ignore: []
 
   @impl true
   def children(cfg) do
@@ -148,13 +148,15 @@ defmodule Omnibot.Contrib.Wordbot do
 
   @impl true
   def on_channel_msg(irc, channel, nick, msg) do
-    words = Regex.split(@split_pattern, msg) |> MapSet.new()
-    game_words = Wordbot.Db.unmatched_words(channel) |> MapSet.new()
-    MapSet.intersection(words, game_words)
-      |> Enum.each(fn word ->
-        Wordbot.Db.add_score(channel, nick, word, msg)
-        Irc.send_to(irc, channel, "#{nick}: Congrats! '#{word}' is good for 1 point.")
-      end)
+    if nick not in cfg[:ignore] do
+      words = Regex.split(@split_pattern, msg) |> MapSet.new()
+      game_words = Wordbot.Db.unmatched_words(channel) |> MapSet.new()
+      MapSet.intersection(words, game_words)
+        |> Enum.each(fn word ->
+          Wordbot.Db.add_score(channel, nick, word, msg)
+          Irc.send_to(irc, channel, "#{nick}: Congrats! '#{word}' is good for 1 point.")
+        end)
+    end
   end
 
   @impl true
