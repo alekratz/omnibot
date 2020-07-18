@@ -3,7 +3,7 @@ defmodule Omnibot.Contrib.Markov do
   alias Omnibot.{Contrib.Markov.ChainServer, Util}
   require Logger
 
-  @default_config save_dir: "markov", order: 2, save_every: 5 * 60
+  @default_config save_dir: "markov", order: 2, save_every: 5 * 60, ignore: []
 
   @registry __MODULE__.Registry
   @supervisor __MODULE__.ChainSupervisor
@@ -22,11 +22,18 @@ defmodule Omnibot.Contrib.Markov do
   end
 
   command "!markov", ["force"] do
-    Irc.send_to(irc, channel, "TODO")
+    reply = chain_server(channel, nick) |> ChainServer.generate()
+    Irc.send_to(irc, channel, "#{nick}: #{reply}")
+  end
+
+  command "!markov", ["emulate", emulate] do
+    reply = chain_server(channel, emulate) |> ChainServer.generate()
+    Irc.send_to(irc, channel, "#{nick}: #{reply}")
   end
 
   command "!markov", ["all"] do
-    Irc.send_to(irc, channel, "TODO")
+    reply = chain_server(channel, :all) |> ChainServer.generate()
+    Irc.send_to(irc, channel, "#{nick}: #{reply}")
   end
 
   command "!markov", ["status"] do
@@ -37,26 +44,12 @@ defmodule Omnibot.Contrib.Markov do
     cfg()[:save_dir]
   end
 
-  @impl true
-  def on_channel_msg(_irc, channel, nick, msg) do
-    train(channel, nick, msg)
-  end
-
   def train(channel, user, msg) do
-    server = ensure_chain_server(channel, user)
+    server = chain_server(channel, user)
     ChainServer.train(server, msg)
   end
 
-  def ensure_chain(channel, user) do
-    ensure_chain_server(channel, user)
-    |> ChainServer.chain()
-  end
-
-  def user_chain(channel, user) do
-    chain_server(channel, user) |> ChainServer.chain()
-  end
-
-  def chain_server(:all) do
+  def chain_servers() do
     # See https://hexdocs.pm/elixir/Registry.html#select/2-examples to understand what the hell is going on here
     # (it just selects the PID of all chain_server processes)
     for {pid} <- Registry.select(@registry, [{{:_, :"$1", :_}, [], [{{:"$1"}}]}]),
@@ -65,27 +58,20 @@ defmodule Omnibot.Contrib.Markov do
 
   def chain_server(channel, user) do
     case Registry.lookup(@registry, {channel, user}) do
-      [] -> nil
+      [] -> start_chain_server!(channel, user)
       [{pid, _} | _] -> pid
     end
   end
 
-  def ensure_chain_server(channel, user) do
-    case chain_server(channel, user) do
-      nil -> start_chain!(channel, user)
-      pid -> pid
-    end
-  end
-
-  defp start_chain!(channel, user) do
-    {:ok, chain} = start_chain(channel, user)
+  defp start_chain_server!(channel, user) do
+    {:ok, chain} = start_chain_server(channel, user)
     chain
   end
 
-  defp start_chain(channel, user) do
+  defp start_chain_server(channel, user) do
     DynamicSupervisor.start_child(
       @supervisor,
-      {ChainServer, cfg: cfg(), channel: channel, user: user, name: {:via, Registry, {@registry, {channel, user}}}}
+      {ChainServer, channel: channel, user: user, name: {:via, Registry, {@registry, {channel, user}}}}
     )
   end
 
@@ -93,9 +79,19 @@ defmodule Omnibot.Contrib.Markov do
     start = Util.now_unix()
     Logger.debug("Saving markov chains")
 
-    chain_server(:all) |> Enum.each(&ChainServer.save/1)
+    chain_servers() |> Enum.each(&ChainServer.save/1)
 
     stop = Util.now_unix()
     Logger.info("Saved markov chains in #{stop - start} seconds")
+  end
+
+  @impl true
+  def on_channel_msg(_irc, channel, nick, msg) do
+    # self-messages are already ignored, so just check the configured ignore-list
+    filter = nick in cfg()[:ignore]
+             || (String.trim(msg) |> String.starts_with?("!"))
+    if !filter do
+      train(channel, nick, msg)
+    end
   end
 end

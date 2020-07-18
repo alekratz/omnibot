@@ -6,15 +6,10 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
   ## Client API
 
   def start_link(opts) do
-    {cfg, opts} = Keyword.pop(opts, :cfg)
     {channel, opts} = Keyword.pop(opts, :channel)
     {user, opts} = Keyword.pop(opts, :user)
 
-    chain = case load(channel, user) do
-      {:ok, chain} -> chain
-      {:error, _} -> %Markov.Chain{order: cfg[:order]}
-    end
-    GenServer.start_link(__MODULE__, {chain, channel, user}, opts)
+    GenServer.start_link(__MODULE__, {channel, user}, opts)
   end
 
   @compile :inline
@@ -23,7 +18,7 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
   @compile :inline
   def channel_dir(channel), do: Path.join(Markov.save_dir(), channel)
 
-  def load(channel, user) do
+  def load(channel, user) when user != :all do
     with {:ok, contents} <- user_path(channel, user) |> File.read(),
          do: {:ok, :erlang.binary_to_term(contents)}
   end
@@ -48,11 +43,41 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
     GenServer.call(server, :user)
   end
 
+  def generate(server) do
+    GenServer.call(server, :generate)
+  end
+
   ## Server callbacks
+  
+  @impl true
+  def init({channel, :all}) do
+    Logger.debug("Creating allchain for channel #{channel}")
+
+    chain = File.ls!(channel_dir(channel))
+      |> Enum.map(&(Path.join(channel_dir(channel), &1) |> Markov.Chain.load!()))
+      |> Markov.Chain.merge()
+    {:ok, {chain, channel, :all}}
+    # TODO: load allchain
+    #chain = case load(channel, user) do
+      #{:ok, chain} -> chain
+      #{:error, _} -> %Markov.Chain{order: cfg()[:order]}
+    #end
+    #{:ok, {chain, channel, user}}
+  end
 
   @impl true
-  def init({chain, channel, user}) do
+  def init({channel, user}) do
+    chain = case load(channel, user) do
+      {:ok, chain} -> chain
+      {:error, _} -> %Markov.Chain{order: Markov.cfg()[:order]}
+    end
     {:ok, {chain, channel, user}}
+  end
+
+  @impl true
+  def handle_call(:save, _from, state = {_chain, channel, :all}) do
+    Logger.debug("Not saving :all chain for #{channel}")
+    {:reply, :ok, state}
   end
 
   @impl true
@@ -60,7 +85,7 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
     File.mkdir_p!(channel_dir(channel))
     path = user_path(channel, user)
     Logger.debug("Saving chain for #{user} on #{channel} to #{path}")
-    File.write!(path, :erlang.term_to_binary(chain))
+    :ok = Markov.Chain.save!(chain, path)
     {:reply, :ok, state}
   end
 
@@ -82,5 +107,10 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
   @impl true
   def handle_call(:user, _from, state = {_chain, _channel, user}) do
     {:reply, user, state}
+  end
+
+  @impl true
+  def handle_call(:generate, _from, state = {chain, _channel, _user}) do
+    {:reply, Markov.Chain.generate(chain), state}
   end
 end
