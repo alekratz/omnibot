@@ -148,7 +148,7 @@ defmodule Omnibot.Contrib.Wordbot do
 
   @impl true
   def on_channel_msg(irc, channel, nick, msg) do
-    if nick not in cfg[:ignore] do
+    if nick not in cfg()[:ignore] do
       words = Regex.split(@split_pattern, msg) |> MapSet.new()
       game_words = Wordbot.Db.unmatched_words(channel) |> MapSet.new()
       MapSet.intersection(words, game_words)
