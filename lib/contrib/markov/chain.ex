@@ -3,7 +3,7 @@ defmodule Omnibot.Contrib.Markov.Chain do
   require Logger
 
   @enforce_keys [:order]
-  defstruct order: 2, chain: %{}
+  defstruct order: 2, chain: %{}, reply_chance: 0.01
 
   def train(chain, line) when is_binary(line) do
     train(chain, line |> String.split(~r/\s+/))

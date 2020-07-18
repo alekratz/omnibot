@@ -51,6 +51,14 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
     GenServer.call(server, :chain_sum)
   end
 
+  def reply_chance(server) do
+    GenServer.call(server, :reply_chance)
+  end
+
+  def set_reply_chance(server, chance) do
+    GenServer.cast(server, {:set_reply_chance, chance})
+  end
+
   ## Server callbacks
   
   @impl true
@@ -121,5 +129,15 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
   @impl true
   def handle_call(:chain_sum, _from, state = {chain, _channel, _user}) do
     {:reply, Markov.Chain.chain_sum(chain), state}
+  end
+
+  @impl true
+  def handle_call(:reply_chance, _from, state = {chain, _channel, _user}) do
+    {:reply, chain.reply_chance, state}
+  end
+
+  @impl true
+  def handle_cast({:set_reply_chance, chance}, {chain, channel, user}) when is_float(chance) or chance == 0 do
+    {:noreply, {%Markov.Chain{chain | reply_chance: chance}, channel, user}}
   end
 end

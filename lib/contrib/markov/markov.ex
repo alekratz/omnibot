@@ -3,7 +3,7 @@ defmodule Omnibot.Contrib.Markov do
   alias Omnibot.{Contrib.Markov.ChainServer, Util}
   require Logger
 
-  @default_config save_dir: "markov", order: 2, save_every: 5 * 60, ignore: []
+  @default_config save_dir: "markov", order: 2, save_every: 5 * 60, ignore: [], max_reply_chance: 0.01
 
   @registry __MODULE__.Registry
   @supervisor __MODULE__.ChainSupervisor
@@ -22,18 +22,20 @@ defmodule Omnibot.Contrib.Markov do
   end
 
   command "!markov", ["force"] do
-    reply = chain_server(channel, nick) |> ChainServer.generate()
-    Irc.send_to(irc, channel, "#{nick}: #{reply}")
+    do_markov_message(irc, channel, nick, nick)
+  end
+
+  # !markov emulate <name>, except it's !markov force <name>
+  command "!markov", ["force", emulate] do
+    do_markov_message(irc, channel, nick, emulate)
   end
 
   command "!markov", ["emulate", emulate] do
-    reply = chain_server(channel, emulate) |> ChainServer.generate()
-    Irc.send_to(irc, channel, "#{nick}: #{reply}")
+    do_markov_message(irc, channel, nick, emulate)
   end
 
   command "!markov", ["all"] do
-    reply = chain_server(channel, :all) |> ChainServer.generate()
-    Irc.send_to(irc, channel, "#{nick}: #{reply}")
+    do_markov_message(irc, channel, nick, :all)
   end
 
   command "!markov", ["status"] do
@@ -41,6 +43,23 @@ defmodule Omnibot.Contrib.Markov do
     value = chain_server(channel, nick) |> ChainServer.chain_sum()
     ratio = (value * 100) / total
     Irc.send_to(irc, channel, "#{nick}: You are worth #{ratio |> Float.round(4)}% of the channel")
+  end
+
+  command "!markov", ["chance"] do
+    chance = reply_chance(channel, nick)
+    Irc.send_to(irc, channel, "#{nick}: Your reply chance is #{chance}")
+  end
+
+  command "!markov", ["chance", chance] do
+    {chance, ""} = Float.parse(chance)
+    chance = min(chance, cfg()[:max_reply_chance]) |> max(0)
+    chain_server(channel, nick) |> ChainServer.set_reply_chance(chance)
+    Irc.send_to(irc, channel, "#{nick}: Your reply chance is now #{chance}")
+  end
+
+  defp do_markov_message(irc, channel, sender, user) do
+    reply = chain_server(channel, user) |> ChainServer.generate()
+    Irc.send_to(irc, channel, "#{sender}: #{reply}")
   end
 
   def save_dir() do
@@ -88,13 +107,22 @@ defmodule Omnibot.Contrib.Markov do
     Logger.info("Saved markov chains in #{stop - start} seconds")
   end
 
+  defp reply_chance(channel, user) do
+    chain_server(channel, user) |> ChainServer.reply_chance()
+  end
+
   @impl true
-  def on_channel_msg(_irc, channel, nick, msg) do
+  def on_channel_msg(irc, channel, nick, msg) do
     # self-messages are already ignored, so just check the configured ignore-list
     filter = nick in cfg()[:ignore]
              || (String.trim(msg) |> String.starts_with?("!"))
     if !filter do
       train(channel, nick, msg)
+
+      # Maybe send user a message
+      if IO.inspect(:rand.uniform()) < IO.inspect(reply_chance(channel, nick)) do
+        do_markov_message(irc, channel, nick, nick)
+      end
     end
   end
 end
