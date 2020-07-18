@@ -72,12 +72,6 @@ defmodule Omnibot.Irc do
   end
 
   @impl true
-  def handle_cast({:tcp, line}, socket) do
-    Logger.debug(line)
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_info({:tcp, _socket, line}, socket) do
     Logger.debug(String.trim(line))
     msg = Msg.parse(line)
