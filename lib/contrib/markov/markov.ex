@@ -37,7 +37,10 @@ defmodule Omnibot.Contrib.Markov do
   end
 
   command "!markov", ["status"] do
-    Irc.send_to(irc, channel, "TODO")
+    total = chain_server(channel, :all) |> ChainServer.chain_sum()
+    value = chain_server(channel, nick) |> ChainServer.chain_sum()
+    ratio = (value * 100) / total
+    Irc.send_to(irc, channel, "#{nick}: You are worth #{ratio |> Float.round(4)}% of the channel")
   end
 
   def save_dir() do

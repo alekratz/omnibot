@@ -47,6 +47,10 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
     GenServer.call(server, :generate)
   end
 
+  def chain_sum(server) do
+    GenServer.call(server, :chain_sum)
+  end
+
   ## Server callbacks
   
   @impl true
@@ -112,5 +116,10 @@ defmodule Omnibot.Contrib.Markov.ChainServer do
   @impl true
   def handle_call(:generate, _from, state = {chain, _channel, _user}) do
     {:reply, Markov.Chain.generate(chain), state}
+  end
+
+  @impl true
+  def handle_call(:chain_sum, _from, state = {chain, _channel, _user}) do
+    {:reply, Markov.Chain.chain_sum(chain), state}
   end
 end

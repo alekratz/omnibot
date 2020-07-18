@@ -85,4 +85,12 @@ defmodule Omnibot.Contrib.Markov.Chain do
     [next | key] = key ++ [Util.weighted_random(weights)]
     [next | do_generate(chain, key)]
   end
+
+  def chain_sum(chain) do
+    Enum.reduce(chain.chain, 0, &(weight_sum(&1) + &2))
+  end
+
+  defp weight_sum({_, weights}) do
+    Enum.reduce(weights, 0, fn {_, weight}, acc -> weight + acc end)
+  end
 end
