@@ -67,4 +67,19 @@ defmodule MarkovChainTest do
       ["foo", "bar"] => %{"baz" => 3, "qux" => 1},
     }
   end
+
+  test "chain merge works correctly" do
+    chain1 = %Chain {order: 2}
+            |> Chain.add_weight(["foo", "bar"], "baz")
+
+    chain2 = %Chain {order: 2}
+            |> Chain.add_weight(["foo", "bar"], "baz")
+            |> Chain.add_weight(["bar", "baz"], "qux")
+
+    merged = Chain.merge(chain1, chain2)
+    assert merged.chain == %{
+      ["foo", "bar"] => %{"baz" => 2},
+      ["bar", "baz"] => %{"qux" => 1},
+    }
+  end
 end
