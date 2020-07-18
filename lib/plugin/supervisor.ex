@@ -22,6 +22,6 @@ defmodule Omnibot.Plugin.Supervisor do
   @impl true
   def init({plugin, cfg}) when is_atom(plugin) do
     children = plugin.plugin_children(cfg)
-    Supervisor.init(children, strategy: :one_for_one)
+    Supervisor.init(children, strategy: :one_for_all)
   end
 end

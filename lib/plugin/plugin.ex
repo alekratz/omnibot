@@ -1,5 +1,5 @@
 defmodule Omnibot.Plugin do
-  @default_opts [include_base: true, opts: [strategy: :one_for_one]]
+  @default_opts [include_base: true] # strategy: one_for_all
 
   defmodule CfgState do
     use Agent
@@ -16,7 +16,6 @@ defmodule Omnibot.Plugin do
 
     def update_state(pid, fun, timeout \\ 5000) do
       Agent.update(pid, fn {cfg, state} -> {cfg, apply(fun, [state])} end, timeout)
-      #Agent.update(pid, &{&1, apply(fun, [&1])}, timeout)
     end
   end
 
