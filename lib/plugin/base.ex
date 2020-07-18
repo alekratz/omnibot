@@ -44,16 +44,17 @@ defmodule Omnibot.Plugin.Base do
         nick = msg.prefix.nick
         case String.upcase(msg.command) do
           "PRIVMSG" ->
-            [channel | params] = msg.params
-            line = Enum.join(params, " ")
+            if (!msg.prefix) || (msg.prefix.nick != Omnibot.State.cfg().nick) do
+              [channel | params] = msg.params
+              line = Enum.join(params, " ")
 
-            case String.split(line, " ") do
-              [cmd | params] -> if Enum.member?(commands(), cmd),
-                  do: on_channel_msg(irc, channel, nick, cmd, params),
-                  else: on_channel_msg(irc, channel, nick, line)
-              _ -> on_channel_msg(irc, channel, nick, line)
+              case String.split(line, " ") do
+                [cmd | params] -> if Enum.member?(commands(), cmd),
+                    do: on_channel_msg(irc, channel, nick, cmd, params),
+                    else: on_channel_msg(irc, channel, nick, line)
+                  _ -> on_channel_msg(irc, channel, nick, line)
+              end
             end
-
           "JOIN" ->
             [channel | _] = msg.params
             on_join(irc, channel, nick)

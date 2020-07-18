@@ -77,9 +77,8 @@ defmodule Omnibot.Irc do
     msg = Msg.parse(line)
 
     # Send the message to the router
-    if (!msg.prefix) || (msg.prefix.nick != State.cfg().nick) do
-      route_msg(self(), msg)
-    end
+    route_msg(self(), msg)
+    
     {:noreply, socket}
   end
 end
