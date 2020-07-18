@@ -2,7 +2,7 @@ defmodule Omnibot.Contrib.Markov.Chain do
   alias Omnibot.{Contrib.Markov.Chain, Util}
 
   @enforce_keys [:order]
-  defstruct order: 2, chain: []
+  defstruct order: 2, chain: %{}
 
   def train(chain, line) when is_binary(line) do
     train(chain, line |> String.split(~r/\s+/))
@@ -20,21 +20,16 @@ defmodule Omnibot.Contrib.Markov.Chain do
     end)
   end
 
-  def add_weight(%Chain {chain: chain, order: order}, key, word, increment \\ 1) do
+  def add_weight(%Chain{chain: chain, order: order}, key, word, increment \\ 1) do
     if length(key) != order do
       raise(ArgumentError, message: "invalid key (length #{length(key)} vs. order #{order})")
     end
 
-    chain = case find_index(chain, key) do
-      # Insert weight
-      nil -> [{key, %{word => increment}} | chain]
-      # Update weight
-      index -> List.update_at(
-          chain,
-          index,
-          fn {key, mapping} -> {key, Map.update(mapping, word, increment, &(&1 + increment))} end
-      )
-    end
+    # %{
+    #   ["word1", "word2"] => %{"target" => weight}
+    # }
+    chain = Map.update(chain, key, %{word => increment},
+      fn weights -> Map.update(weights, word, increment, &(increment + &1)) end)
     %Chain{chain: chain, order: order}
   end
 
