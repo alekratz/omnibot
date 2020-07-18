@@ -120,7 +120,7 @@ defmodule Omnibot.Contrib.Markov do
       train(channel, nick, msg)
 
       # Maybe send user a message
-      if IO.inspect(:rand.uniform()) < IO.inspect(reply_chance(channel, nick)) do
+      if :rand.uniform() < reply_chance(channel, nick) do
         do_markov_message(irc, channel, nick, nick)
       end
     end
