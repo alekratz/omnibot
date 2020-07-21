@@ -116,7 +116,7 @@ defmodule Omnibot.Contrib.Markov do
     # self-messages are already ignored, so just check the configured ignore-list
     filter = nick in cfg()[:ignore]
              || (String.trim(msg) |> String.starts_with?("!"))
-    if !filter do
+    unless filter do
       train(channel, nick, msg)
 
       # Maybe send user a message
