@@ -21,17 +21,17 @@ defmodule Omnibot.Contrib.Markov.Chain do
     end)
   end
 
-  def add_weight(%Chain{chain: chain, order: order}, key, word, increment \\ 1) do
-    if length(key) != order do
-      raise(ArgumentError, message: "invalid key (length #{length(key)} vs. order #{order})")
+  def add_weight(chain = %Chain{}, key, word, increment \\ 1) do
+    if length(key) != chain.order do
+      raise(ArgumentError, message: "invalid key (length #{length(key)} vs. order #{chain.order})")
     end
 
     # %{
     #   ["word1", "word2"] => %{"target" => weight}
     # }
-    chain = Map.update(chain, key, %{word => increment},
+    chain_map = Map.update(chain.chain, key, %{word => increment},
       fn weights -> Map.update(weights, word, increment, &(increment + &1)) end)
-    %Chain{chain: chain, order: order}
+    %Chain{chain | chain: chain_map}
   end
 
   def generate(chain) do

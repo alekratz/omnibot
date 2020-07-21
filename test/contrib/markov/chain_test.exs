@@ -68,6 +68,23 @@ defmodule MarkovChainTest do
     }
   end
 
+  test "chain add_weight does not reset reply_chance" do
+    chain = %Chain {order: 2, reply_chance: 0.0}
+            |> Chain.add_weight(["foo", "bar"], "baz")
+
+    chain = chain |> Chain.add_weight(["foo", "bar"], "baz", 2)
+    assert chain.reply_chance == 0.0
+
+    chain = chain |> Chain.add_weight(["foo", "bar"], "qux")
+    assert chain.reply_chance == 0.0
+
+    chain = chain |> Chain.add_weight(["bar", "baz"], "qux")
+    assert chain.reply_chance == 0.0
+
+    chain = chain |> Chain.add_weight(["bar", "baz"], nil)
+    assert chain.reply_chance == 0.0
+  end
+
   test "chain merge works correctly" do
     chain1 = %Chain {order: 2}
             |> Chain.add_weight(["foo", "bar"], "baz")
