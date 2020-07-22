@@ -3,7 +3,13 @@ defmodule Omnibot.Contrib.Markov do
   alias Omnibot.{Contrib.Markov.ChainServer, Util}
   require Logger
 
-  @default_config save_dir: "markov", order: 2, save_every: 5 * 60, ignore: [], max_reply_chance: 0.01
+  @default_config [
+    save_dir: "markov",
+    order: 2,
+    save_every: 5 * 60,
+    ignore: [],
+    max_reply_chance: 0.01,
+  ]
 
   @registry __MODULE__.Registry
   @supervisor __MODULE__.ChainSupervisor
