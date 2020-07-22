@@ -16,5 +16,5 @@ config = %Config {
     {Omnibot.Contrib.Wordbot, channels: ["#idleville"], ignore: ["username"]},
   ],
 
-  #module_paths: [{"modules", recurse: true}]
+  #plugin_paths: [{"plugins", recurse: true}]
 }
