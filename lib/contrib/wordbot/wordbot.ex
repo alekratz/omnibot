@@ -1,6 +1,6 @@
 defmodule Omnibot.Contrib.Wordbot do
   use Omnibot.Plugin
-  alias Omnibot.{Contrib.Wordbot, State, Util}
+  alias Omnibot.{Contrib.Wordbot, Irc, Util}
   require Logger
 
   @default_config wordbot_source: "words.txt", wordbot_db: "wordbot.db", words_per_round: 300, hours_per_round: 5, ignore: []
@@ -162,7 +162,8 @@ defmodule Omnibot.Contrib.Wordbot do
   @impl true
   def on_join(irc, channel, who) do
     # Attempt to start a new round
-    if State.cfg().nick == who do
+    cfg = Irc.cfg(irc)
+    if cfg.nick == who do
       start_round(irc, channel)
     end
   end

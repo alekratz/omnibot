@@ -42,9 +42,10 @@ defmodule Omnibot.Plugin.Base do
 
       defp route_msg(irc, msg) do
         nick = msg.prefix.nick
+        cfg = Omnibot.Irc.cfg(irc)
         case String.upcase(msg.command) do
           "PRIVMSG" ->
-            if (!msg.prefix) || (msg.prefix.nick != Omnibot.State.cfg().nick) do
+            if (!msg.prefix) || (msg.prefix.nick != cfg.nick) do
               [channel | params] = msg.params
               line = Enum.join(params, " ")
 

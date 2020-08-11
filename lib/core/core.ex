@@ -1,12 +1,12 @@
 defmodule Omnibot.Core do
   use Omnibot.Plugin
-  alias Omnibot.State
+  alias Omnibot.{Irc, State}
 
   @default_config channels: :all
 
   @impl true
   def on_join(irc, channel, nick) do
-    cfg = State.cfg()
+    cfg = Irc.cfg(irc)
     if nick == cfg.nick do
       add_channel(channel)
       # Sync if we join a channel we shouldn't be in
@@ -17,7 +17,7 @@ defmodule Omnibot.Core do
 
   @impl true
   def on_part(irc, channel, nick) do
-    cfg = State.cfg()
+    cfg = Irc.cfg(irc)
     if nick == cfg.nick do
       remove_channel(channel)
       # Sync if we join a channel we forcibly part a channel we shouldn't leave
@@ -28,7 +28,7 @@ defmodule Omnibot.Core do
 
   @impl true
   def on_kick(irc, channel, _nick, target) do
-    cfg = State.cfg()
+    cfg = Irc.cfg(irc)
     if target == cfg.nick do
       remove_channel(channel)
       # Generally, being kicked is not intentionally leaving a channel, so always sync here

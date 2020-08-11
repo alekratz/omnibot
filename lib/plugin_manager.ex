@@ -1,4 +1,4 @@
-defmodule Omnibot.PluginSupervisor do
+defmodule Omnibot.PluginManager do
   @moduledoc false
 
   use Supervisor
