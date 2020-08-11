@@ -30,11 +30,6 @@ defmodule Omnibot.Irc do
   def cfg(irc), do: GenServer.call(irc, :cfg)
 
   defp route_msg(irc, cfg, msg) do
-    # TODO :
-    # * Plugins that are loaded are not having their defaults applied, since
-    #   the add_loaded_plugin in State would handle that. May be a good idea to
-    #   make a Config.load/1 function that will handle loading of a
-    #   configuration file instead of doing it in the root Omnibot module
     plugins = Config.channel_plugins(cfg, Msg.channel(msg))
 
     Task.Supervisor.async_stream_nolink(
