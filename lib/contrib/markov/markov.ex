@@ -44,12 +44,12 @@ defmodule Omnibot.Contrib.Markov do
     do_markov_message(irc, channel, nick, :all)
   end
 
-  command "!markov", ["status"] do
-    total = chain_server(channel, :all) |> ChainServer.chain_sum()
-    value = chain_server(channel, nick) |> ChainServer.chain_sum()
-    ratio = (value * 100) / total
-    Irc.send_to(irc, channel, "#{nick}: You are worth #{ratio |> Float.round(4)}% of the channel")
-  end
+  #command "!markov", ["status"] do
+    #total = chain_server(channel, :all) |> ChainServer.chain_sum()
+    #value = chain_server(channel, nick) |> ChainServer.chain_sum()
+    #ratio = (value * 100) / total
+    #Irc.send_to(irc, channel, "#{nick}: You are worth #{ratio |> Float.round(4)}% of the channel")
+  #end
 
   command "!markov", ["chance"] do
     chance = reply_chance(channel, nick)
