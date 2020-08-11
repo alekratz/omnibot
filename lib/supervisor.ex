@@ -16,7 +16,6 @@ defmodule Omnibot.Supervisor do
     # TODO : move cfg to its own process so reloading it is as simple as killing the process
     children = [
       {Task.Supervisor, name: Omnibot.RouterSupervisor, strategy: :one_for_one},
-      {Omnibot.State, cfg: cfg, name: Omnibot.State},
       {Omnibot.PluginManager, cfg: cfg, name: Omnibot.PluginManager},
     ] ++ unless IEx.started?(),
       do: [{Omnibot.Irc, cfg: cfg, name: Omnibot.Irc}],
