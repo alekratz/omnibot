@@ -50,7 +50,7 @@ defmodule Omnibot.Plugin.Base do
               line = Enum.join(params, " ")
 
               case String.split(line, " ") do
-                [cmd | params] -> if Enum.member?(commands(), cmd),
+                [cmd | params] -> if cmd in commands(),
                     do: on_channel_msg(irc, channel, nick, cmd, params),
                     else: on_channel_msg(irc, channel, nick, line)
                   _ -> on_channel_msg(irc, channel, nick, line)

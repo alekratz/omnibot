@@ -10,7 +10,7 @@ defmodule Omnibot.Core do
     if nick == cfg.nick do
       add_channel(channel)
       # Sync if we join a channel we shouldn't be in
-      if !Enum.member?(Config.all_channels(cfg), channel),
+      if channel in Config.all_channels(cfg),
         do: sync_channels(irc)
     end
   end
@@ -21,7 +21,7 @@ defmodule Omnibot.Core do
     if nick == cfg.nick do
       remove_channel(channel)
       # Sync if we join a channel we forcibly part a channel we shouldn't leave
-      if Enum.member?(Config.all_channels(cfg), channel),
+      if channel in Config.all_channels(cfg),
         do: sync_channels(irc)
     end
   end
