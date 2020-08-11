@@ -6,8 +6,9 @@ defmodule Omnibot.Irc do
 
   ## Client API
 
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, :ok, opts)
+  def start_link(opts) do
+    {cfg, opts} = Keyword.pop!(opts, :cfg)
+    GenServer.start_link(__MODULE__, cfg, opts)
   end
 
   def send_msg(irc, msg) do
@@ -15,8 +16,7 @@ defmodule Omnibot.Irc do
   end
 
   def send_msg(irc, command, params) when is_list(params) do
-    cfg = State.cfg()
-    GenServer.cast(irc, {:send_msg, Config.msg(cfg, command, params)})
+    GenServer.cast(irc, {:send_msg, command, params})
   end
 
   def send_msg(irc, command, param), do: send_msg(irc, command, [param])
@@ -26,6 +26,8 @@ defmodule Omnibot.Irc do
   def join(irc, channel), do: send_msg(irc, "JOIN", channel)
 
   def part(irc, channel), do: send_msg(irc, "PART", channel)
+
+  def cfg(irc), do: GenServer.call(irc, :cfg)
 
   defp route_msg(irc, msg) do
     plugins = Msg.channel(msg) |> State.channel_plugins()
@@ -44,8 +46,7 @@ defmodule Omnibot.Irc do
   ## Server callbacks
 
   @impl true
-  def init(:ok) do
-    cfg = State.cfg()
+  def init(cfg) do
     _ssl = cfg.ssl
 
     {:ok, socket} =
@@ -56,7 +57,7 @@ defmodule Omnibot.Irc do
     send_msg(self(), "USER", [cfg.user, "0", "*", cfg.real])
     :inet.setopts(socket, active: true)
 
-    {:ok, socket}
+    {:ok, {socket, cfg}}
   end
 
   defp write(socket, msg) do
@@ -66,19 +67,31 @@ defmodule Omnibot.Irc do
   end
 
   @impl true
-  def handle_cast({:send_msg, msg}, socket) do
+  def handle_cast({:send_msg, command, params}, state = {socket, cfg}) do
+    msg = Config.msg(cfg, command, params)
     write(socket, msg)
-    {:noreply, socket}
+    {:noreply, state}
   end
 
   @impl true
-  def handle_info({:tcp, _socket, line}, socket) do
+  def handle_cast({:send_msg, msg}, state = {socket, _cfg}) do
+    write(socket, msg)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_call(:cfg, _from, state = {_socket, cfg}) do
+    {:reply, cfg, state}
+  end
+
+  @impl true
+  def handle_info({:tcp, _socket, line}, state) do
     Logger.debug(String.trim(line))
     msg = Msg.parse(line)
 
     # Send the message to the router
     route_msg(self(), msg)
     
-    {:noreply, socket}
+    {:noreply, state}
   end
 end

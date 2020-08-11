@@ -15,15 +15,14 @@ defmodule Omnibot.Supervisor do
                     |> Code.eval_file()
     cfg = bindings[:config]
 
+    # TODO : move cfg to its own process so reloading it is as simple as killing the process
     children = [
       {Task.Supervisor, name: Omnibot.RouterSupervisor, strategy: :one_for_one},
       {Omnibot.State, cfg: cfg, name: Omnibot.State},
-      {Omnibot.PluginSupervisor, cfg: cfg, name: Omnibot.PluginSupervisor},
+      {Omnibot.PluginManager, cfg: cfg, name: Omnibot.PluginManager},
     ] ++ unless IEx.started?(),
-      do: [{Omnibot.Irc, name: Omnibot.Irc}],
+      do: [{Omnibot.Irc, cfg: cfg, name: Omnibot.Irc}],
       else: []
-
-    # TODO : how to handle config reloading?
 
     # :one_for_all here because the RouterSupervisor and IRC server are co-dependent
     Supervisor.init(children, strategy: :one_for_all)
