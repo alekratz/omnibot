@@ -47,13 +47,13 @@ defmodule Omnibot.Core do
 
   @impl true
   def on_init(_cfg) do
-    MapSet.new()
+    %{channels: MapSet.new()}
   end
 
   defp sync_channels(irc) do
     cfg = Irc.cfg(irc)
     desired = MapSet.new(Config.all_channels(cfg))
-    present = state()
+    present = state().channels
 
     to_join = MapSet.difference(desired, present)
       |> MapSet.to_list()
@@ -65,11 +65,11 @@ defmodule Omnibot.Core do
   end
 
   defp add_channel(channel) do
-    update_state(fn state -> MapSet.put(state, channel) end)
+    update_state(fn cfg = %{channels: channels} -> %{cfg | channels: MapSet.put(channels, channel)} end)
   end
   
   defp remove_channel(channel) do
-    update_state(fn state -> MapSet.delete(state, channel) end)
+    update_state(fn cfg = %{channels: channels} -> %{cfg | channels: MapSet.delete(channels, channel)} end)
   end
 end
 
