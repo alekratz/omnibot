@@ -1,4 +1,8 @@
 defmodule Omnibot.Plugin.Supervisor do
+  @moduledoc """
+  Wraps around a plugin and supervises the plugin's specified children.
+  """
+
   use Supervisor
 
   def start_link(opts) do
