@@ -7,6 +7,7 @@ config = %Config {
   ssl: false,
 
   plugins: [
+    Omnibot.Core,
     {Omnibot.Contrib.OnConnect, commands: [
       ["privmsg", "nickserv", "register", "password123", "omnibot@omni.bot"],
       ["privmsg", "nickserv", "identify", "password123"]

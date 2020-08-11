@@ -3,7 +3,6 @@ defmodule Omnibot.PluginManager do
 
   use Supervisor
   require Logger
-  alias Omnibot.State
 
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts[:cfg], opts)
@@ -13,23 +12,10 @@ defmodule Omnibot.PluginManager do
   def init(cfg) do
     compile_files(cfg.plugin_paths || [])
 
-    # These are plugins that need to be loaded for core functionality of the bot
-    core = [
-      Omnibot.Core,
-    ]
-
     # Map the plugins in the configuration to the children
     children =
-      for plug <- (core ++ cfg.plugins) do
-        {name, cfg} = case plug do
-          {name, cfg} -> {name, cfg ++ name.default_config()}
-          name -> {name, name.default_config()}
-        end
-        {Omnibot.Plugin.Supervisor, plugin: name, cfg: cfg}
-      end
-
-    # Add each child to the "loaded plugins" list in the State
-    Enum.each(children, fn {_plugin, opts} -> State.add_loaded_plugin({opts[:plugin], opts[:cfg]}) end)
+      for {plugin, cfg} <- cfg.plugins,
+      do: {Omnibot.Plugin.Supervisor, plugin: plugin, cfg: cfg}
 
     Supervisor.init(children, strategy: :one_for_one)
   end

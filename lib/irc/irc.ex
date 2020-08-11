@@ -1,7 +1,7 @@
 defmodule Omnibot.Irc do
   require Logger
   alias Omnibot.Irc.Msg
-  alias Omnibot.{Config, State}
+  alias Omnibot.Config
   use GenServer
 
   ## Client API
@@ -29,8 +29,13 @@ defmodule Omnibot.Irc do
 
   def cfg(irc), do: GenServer.call(irc, :cfg)
 
-  defp route_msg(irc, msg) do
-    plugins = Msg.channel(msg) |> State.channel_plugins()
+  defp route_msg(irc, cfg, msg) do
+    # TODO :
+    # * Plugins that are loaded are not having their defaults applied, since
+    #   the add_loaded_plugin in State would handle that. May be a good idea to
+    #   make a Config.load/1 function that will handle loading of a
+    #   configuration file instead of doing it in the root Omnibot module
+    plugins = Config.channel_plugins(cfg, Msg.channel(msg))
 
     Task.Supervisor.async_stream_nolink(
       Omnibot.RouterSupervisor,
@@ -85,12 +90,12 @@ defmodule Omnibot.Irc do
   end
 
   @impl true
-  def handle_info({:tcp, _socket, line}, state) do
+  def handle_info({:tcp, _info_socket, line}, state = {_socket, cfg}) do
     Logger.debug(String.trim(line))
     msg = Msg.parse(line)
 
     # Send the message to the router
-    route_msg(self(), msg)
+    route_msg(self(), cfg, msg)
     
     {:noreply, state}
   end

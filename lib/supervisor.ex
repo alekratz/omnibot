@@ -3,6 +3,7 @@ defmodule Omnibot.Supervisor do
 
   use Supervisor
   require IEx
+  alias Omnibot.Config
 
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, :ok, opts)
@@ -10,10 +11,7 @@ defmodule Omnibot.Supervisor do
 
   @impl true
   def init(:ok) do
-    
-    {_, bindings} = System.get_env("OMNIBOT_CFG", "omnibot.exs")
-                    |> Code.eval_file()
-    cfg = bindings[:config]
+    cfg = System.get_env("OMNIBOT_CFG", "omnibot.exs") |> Config.load()
 
     # TODO : move cfg to its own process so reloading it is as simple as killing the process
     children = [

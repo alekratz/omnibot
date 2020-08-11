@@ -6,7 +6,7 @@ defmodule Omnibot.Config do
   plugins and their configuration.
 
   ## Configuration keys
-  
+
     - server: the IRC server to connect to. **(required)**
     - nick: the IRC nickname to use for the bot. **(optional, default "omnibot")**
     - user: the IRC username to use for the bot. **(optional, default "omnibot")**
@@ -18,12 +18,12 @@ defmodule Omnibot.Config do
     - plugin_paths: a list of locations to look for additional plugins. **(optional, default [])**
 
   ## Plugins configuration
-  
+
   Inside the `plugins` key listed above, a list of plugins is expected. Plugins are either a single
   atom, or a tuple of the plugin and a keyword list of configuration.
 
   ### Plugin channels
-  
+
   All plugins have a `channels` configuration value, determining which channels this plugin is
   active in. This value may also be set to the atom value `:all`, which indicates that it is active
   on all channels.
@@ -32,7 +32,7 @@ defmodule Omnibot.Config do
   knows which channels to join.
 
   ## Example configuration
-  
+
   iex> %Omnibot.Config {
   ...>   nick: "omnibot_testing",
   ...>   server: "irc.bonerjamz.us",
@@ -87,11 +87,12 @@ defmodule Omnibot.Config do
   """
   def all_channels(cfg) do
     Enum.flat_map(cfg.plugins, fn
-      {_, [channels: :all]} -> []
-      {_, [channels: channels]} -> channels
+      {_, cfg} -> if cfg[:channels] in [nil, :all],
+          do: [],
+          else: cfg[:channels]
     end)
-      |> MapSet.new()
-      |> MapSet.to_list()
+    |> MapSet.new()
+    |> MapSet.to_list()
   end
 
   @doc """
@@ -108,9 +109,9 @@ defmodule Omnibot.Config do
   %Omnibot.Irc.Msg.Prefix {:nick => "omnibot", :user => "omnibot", :host => nil}
   """
   def msg_prefix(cfg) do
-    %Msg.Prefix {
+    %Msg.Prefix{
       nick: cfg.nick,
-      user: cfg.user,
+      user: cfg.user
     }
   end
 
@@ -135,10 +136,29 @@ defmodule Omnibot.Config do
   }
   """
   def msg(cfg, command, params \\ []) do
-    %Msg {
+    %Msg{
       prefix: msg_prefix(cfg),
       command: command,
-      params: params,
+      params: params
     }
+  end
+
+  def channel_plugins(cfg, channel) do
+    cfg.plugins
+    |> Enum.filter(fn {_plug, cf} ->
+      cf[:channels] == :all or channel in Keyword.get(cf, :channels, [])
+    end)
+  end
+
+  def load(path) do
+    with {_, bindings} <- Code.eval_file(path) do
+      cfg = bindings[:config] 
+      plugins = cfg.plugins
+                |> Enum.map(fn
+                  plug when is_atom(plug) -> {plug, plug.default_config()}
+                  {plug, cfg}-> {plug, cfg ++ plug.default_config()}
+                end)
+         %Omnibot.Config{cfg | plugins: plugins}
+    end
   end
 end
