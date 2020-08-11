@@ -1,6 +1,6 @@
 defmodule Omnibot.Core do
   use Omnibot.Plugin
-  alias Omnibot.{Irc, State}
+  alias Omnibot.{Config, Irc}
 
   @default_config channels: :all
 
@@ -10,7 +10,7 @@ defmodule Omnibot.Core do
     if nick == cfg.nick do
       add_channel(channel)
       # Sync if we join a channel we shouldn't be in
-      if !Enum.member?(State.all_channels(), channel),
+      if !Enum.member?(Config.all_channels(cfg), channel),
         do: sync_channels(irc)
     end
   end
@@ -21,7 +21,7 @@ defmodule Omnibot.Core do
     if nick == cfg.nick do
       remove_channel(channel)
       # Sync if we join a channel we forcibly part a channel we shouldn't leave
-      if Enum.member?(State.all_channels(), channel),
+      if Enum.member?(Config.all_channels(cfg), channel),
         do: sync_channels(irc)
     end
   end
@@ -51,7 +51,8 @@ defmodule Omnibot.Core do
   end
 
   defp sync_channels(irc) do
-    desired = MapSet.new(State.all_channels())
+    cfg = Irc.cfg(irc)
+    desired = MapSet.new(Config.all_channels(cfg))
     present = state()
 
     to_join = MapSet.difference(desired, present)
