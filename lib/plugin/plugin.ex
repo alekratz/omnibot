@@ -37,6 +37,10 @@ defmodule Omnibot.Plugin do
         Omnibot.Plugin.CfgState.cfg(__MODULE__.CfgState)
       end
 
+      def cfg(opt, default \\ nil) when unquote(opts[:include_base]) do
+        Keyword.get(cfg(), opt, default)
+      end
+
       def state() when unquote(opts[:include_base]) do
         Omnibot.Plugin.CfgState.state(__MODULE__.CfgState)
       end
