@@ -29,9 +29,16 @@ defmodule Omnibot.Irc do
 
   def cfg(irc), do: GenServer.call(irc, :cfg)
 
+  defp route_msg(irc, cfg, :connect) do
+    handle_msg(irc, cfg.plugins, :connect)
+  end
+
   defp route_msg(irc, cfg, msg) do
     plugins = Config.channel_plugins(cfg, Msg.channel(msg))
+    handle_msg(irc, plugins, msg)
+  end
 
+  defp handle_msg(irc, plugins, msg) do
     Task.Supervisor.async_stream_nolink(
       Omnibot.RouterSupervisor,
       plugins,
@@ -40,7 +47,6 @@ defmodule Omnibot.Irc do
       timeout: 30_000,
       on_timeout: :kill_task
     ) |> Stream.run()
-
   end
 
   ## Server callbacks
@@ -57,6 +63,7 @@ defmodule Omnibot.Irc do
     send_msg(self(), "USER", [cfg.user, "0", "*", cfg.real])
     :inet.setopts(socket, active: true)
 
+    route_msg(self(), cfg, :connect)
     {:ok, {socket, cfg}}
   end
 

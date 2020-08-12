@@ -20,6 +20,9 @@ defmodule Omnibot.Plugin.Base do
       def on_init(_cfg), do: nil
 
       @impl true
+      def on_connect(_irc), do: nil
+
+      @impl true
       def on_msg(irc, msg) do
         route_msg(irc, msg)
       end
@@ -37,6 +40,8 @@ defmodule Omnibot.Plugin.Base do
       import Omnibot.Plugin.Base
 
       @behaviour Plugin.Base
+
+      defp route_msg(irc, :connect), do: on_connect(irc)
 
       defp route_msg(irc, %Irc.Msg {prefix: nil}), do: nil
 
@@ -95,6 +100,7 @@ defmodule Omnibot.Plugin.Base do
   @callback on_part(irc :: pid(), channel :: String.t(), nick :: String.t()) :: any
   @callback on_kick(irc :: pid(), channel :: String.t(), nick :: String.t(), target :: String.t()) :: any
   @callback on_init(cfg :: any) :: any
+  @callback on_connect(irc :: pid()) :: any
   @callback default_config() :: any
 
   defmacro command(cmd, opts) do
