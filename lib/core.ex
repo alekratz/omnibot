@@ -3,7 +3,7 @@ defmodule Omnibot.Core do
   use Omnibot.Plugin
   alias Omnibot.{Config, Irc, Util}
 
-  @default_config ping_every: 60, ping_after: 60, channels: :all
+  @default_config quit_after: 180, ping_after: 60, channels: :all
 
   @impl true
   def children(_cfg) do
@@ -59,16 +59,15 @@ defmodule Omnibot.Core do
       "001" -> sync_channels(irc)
       "PING" ->
         Irc.send_msg(irc, "PONG", msg.params)
-        update_last_ping(Util.now_unix())
-        update_last_pong(Util.now_unix()) # also update pong because we ponged
-      "PONG" -> update_last_pong(Util.now_unix())
+        update_last_reply(Util.now_unix())
       _ -> route_msg(irc, msg)
     end
+    update_last_reply(Util.now_unix())
   end
 
   @impl true
   def on_init(_cfg) do
-    %{channels: MapSet.new(), last_pong: Util.now_unix(), last_ping: Util.now_unix()}
+    %{channels: MapSet.new(), last_reply: Util.now_unix()}
   end
 
   defp sync_channels(irc) do
@@ -93,35 +92,28 @@ defmodule Omnibot.Core do
     update_state(fn cfg = %{channels: channels} -> %{cfg | channels: MapSet.delete(channels, channel)} end)
   end
 
-  defp last_pong() do
-    state().last_pong
+  defp last_reply() do
+    state().last_reply
   end
 
-  defp update_last_pong(last_pong) do
-    update_state(fn cfg -> %{cfg | last_pong: last_pong} end)
-  end
-
-  defp last_ping() do
-    state().last_ping
-  end
-
-  defp update_last_ping(last_ping) do
-    update_state(fn cfg -> %{cfg | last_ping: last_ping} end)
+  defp update_last_reply(last_reply) do
+    update_state(fn cfg -> %{cfg | last_reply: last_reply} end)
   end
 
   defp ping_watcher(irc) do
-    since_pong = Util.now_unix() - last_pong()
-    since_ping = Util.now_unix() - last_ping()
-    ping_every = cfg(:ping_every)
+    since_reply = Util.now_unix() - last_reply()
     ping_after = cfg(:ping_after)
+    quit_after = cfg(:quit_after)
     cond do
       # Kill IRC instance
-      since_pong >= (3 * ping_every) ->
-        Logger.error("IRC has not replied in #{3 * ping_every}")
+      since_reply >= quit_after ->
+        Logger.error("IRC has not replied in #{quit_after}")
         Process.exit(irc, :ping_timeout)
 
       # Send ping message
-      since_pong >= ping_every and ping_after >= since_ping ->
+        # use == since >= will ping each time until a reply is received
+      since_reply == ping_after -> 
+        update_last_reply(Util.now_unix())
         Irc.send_msg(irc, "PING", "omnibot")
 
       true -> nil
