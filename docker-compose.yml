@@ -1,13 +1,9 @@
 version: "3.8"
 services:
   omnibot:
-    #image: "elixir:1.10"
     build: .
-    #environment:
-    #MIX_ENV: prod
     env_file: docker.env
     volumes:
       - ".:/app"
     working_dir: "/app"
     restart: always
-    #entrypoint: "mix local.hex --force; mix run --no-halt"
