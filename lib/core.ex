@@ -4,6 +4,26 @@ defmodule Omnibot.Core do
   alias Omnibot.{Config, Irc, Util}
 
   @default_config quit_after: 180, ping_after: 60, channels: :all
+  
+  ## Client API
+
+  defp add_channel(channel) do
+    update_state(fn cfg = %{channels: channels} -> %{cfg | channels: MapSet.put(channels, channel)} end)
+  end
+  
+  defp remove_channel(channel) do
+    update_state(fn cfg = %{channels: channels} -> %{cfg | channels: MapSet.delete(channels, channel)} end)
+  end
+
+  defp last_reply() do
+    state().last_reply
+  end
+
+  defp update_last_reply(last_reply) do
+    update_state(fn cfg -> %{cfg | last_reply: last_reply} end)
+  end
+
+  ## Server callbacks
 
   @impl true
   def children(_cfg) do
@@ -84,22 +104,8 @@ defmodule Omnibot.Core do
     Enum.each(to_part, fn channel -> Irc.part(irc, channel) end)
   end
 
-  defp add_channel(channel) do
-    update_state(fn cfg = %{channels: channels} -> %{cfg | channels: MapSet.put(channels, channel)} end)
-  end
+  ## Ping watcher worker
   
-  defp remove_channel(channel) do
-    update_state(fn cfg = %{channels: channels} -> %{cfg | channels: MapSet.delete(channels, channel)} end)
-  end
-
-  defp last_reply() do
-    state().last_reply
-  end
-
-  defp update_last_reply(last_reply) do
-    update_state(fn cfg -> %{cfg | last_reply: last_reply} end)
-  end
-
   defp ping_watcher(irc) do
     since_reply = Util.now_unix() - last_reply()
     ping_after = cfg(:ping_after)
