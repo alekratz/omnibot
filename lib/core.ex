@@ -23,6 +23,20 @@ defmodule Omnibot.Core do
     update_state(fn cfg -> %{cfg | last_reply: last_reply} end)
   end
 
+  defp sync_channels(irc) do
+    cfg = Irc.cfg(irc)
+    desired = MapSet.new(Config.all_channels(cfg))
+    present = state().channels
+
+    to_join = MapSet.difference(desired, present)
+      |> MapSet.to_list()
+    to_part = MapSet.difference(present, desired)
+      |> MapSet.to_list()
+
+    Enum.each(to_join, fn channel -> Irc.join(irc, channel) end)
+    Enum.each(to_part, fn channel -> Irc.part(irc, channel) end)
+  end
+
   ## Server callbacks
 
   @impl true
@@ -88,20 +102,6 @@ defmodule Omnibot.Core do
   @impl true
   def on_init(_cfg) do
     %{channels: MapSet.new(), last_reply: Util.now_unix()}
-  end
-
-  defp sync_channels(irc) do
-    cfg = Irc.cfg(irc)
-    desired = MapSet.new(Config.all_channels(cfg))
-    present = state().channels
-
-    to_join = MapSet.difference(desired, present)
-      |> MapSet.to_list()
-    to_part = MapSet.difference(present, desired)
-      |> MapSet.to_list()
-
-    Enum.each(to_join, fn channel -> Irc.join(irc, channel) end)
-    Enum.each(to_part, fn channel -> Irc.part(irc, channel) end)
   end
 
   ## Ping watcher worker
