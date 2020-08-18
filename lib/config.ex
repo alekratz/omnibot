@@ -38,14 +38,15 @@ defmodule Omnibot.Config do
   ...>   server: "irc.bonerjamz.us",
   ...>   port: 6667,
   ...>   ssl: false,
+  ...>   channels: ["#idleville"],
   ...>   plugins: [
   ...>     {Omnibot.Contrib.OnConnect, commands: [
   ...>       ["privmsg", "nickserv", "register", "password123", "omnibot@omni.bot"],
   ...>       ["privmsg", "nickserv", "identify", "password123"]
   ...>     ]},
-  ...>     {Omnibot.Contrib.Linkbot, channels: :all},
-  ...>     {Omnibot.Contrib.Fortune, channels: :all},
-  ...>     {Omnibot.Contrib.Wordbot, channels: ["#idleville"], ignore: ["username"]},
+  ...>     Omnibot.Contrib.Linkbot,
+  ...>     Omnibot.Contrib.Fortune,
+  ...>     {Omnibot.Contrib.Wordbot, ignore: ["username"]},
   ...>   ],
   ...>   plugin_paths: [{"plugins", recurse: true}]
   ...> }
@@ -62,6 +63,7 @@ defmodule Omnibot.Config do
     real: "omnibot",
     port: 6667,
     ssl: false,
+    channels: [],
     plugins: [],
     plugin_paths: []
   ]
@@ -77,22 +79,35 @@ defmodule Omnibot.Config do
 
   iex> cfg = %Omnibot.Config {
   ...>     server: "irc.example.com",
+  ...>     channels: ["#general"],
   ...>     plugins: [
   ...>       {ExamplePlugin, channels: ["#omnibot", "#example"]},
   ...>       {OtherPlugin, channels: ["#example"]}
   ...>     ]
   ...> }
   iex> Omnibot.Config.all_channels(cfg)
-  ["#example", "#omnibot"]
+  ["#example", "#general", "#omnibot"]
   """
-  def all_channels(cfg) do
-    Enum.flat_map(cfg.plugins, fn
-      {_, cfg} -> if cfg[:channels] in [nil, :all],
-          do: [],
-          else: cfg[:channels]
-    end)
+  def all_channels(cfg = %Omnibot.Config{}) do
+    (do_all_channels(cfg.plugins) ++ cfg.channels)
     |> MapSet.new()
     |> MapSet.to_list()
+  end
+
+  defp do_all_channels([]) do
+    []
+  end
+
+  defp do_all_channels([plugin | plugins]) when is_atom(plugin) do
+    do_all_channels([{plugin, plugin.default_config()} | plugins])
+  end
+
+  defp do_all_channels([{_plugin, cfg} | plugins]) do
+    channels = Keyword.get(cfg, :channels, [])
+    head = if channels in [nil, :all],
+      do: [],
+      else: channels
+    head ++ do_all_channels(plugins)
   end
 
   @doc """
@@ -108,7 +123,7 @@ defmodule Omnibot.Config do
   iex> Omnibot.Config.msg_prefix(cfg)
   %Omnibot.Irc.Msg.Prefix {:nick => "omnibot", :user => "omnibot", :host => nil}
   """
-  def msg_prefix(cfg) do
+  def msg_prefix(cfg = %Omnibot.Config{}) do
     %Msg.Prefix{
       nick: cfg.nick,
       user: cfg.user
@@ -135,7 +150,7 @@ defmodule Omnibot.Config do
     params: ["#testing", "this is a test message"],
   }
   """
-  def msg(cfg, command, params \\ []) do
+  def msg(cfg = %Omnibot.Config{}, command, params \\ []) do
     %Msg{
       prefix: msg_prefix(cfg),
       command: command,
@@ -143,16 +158,54 @@ defmodule Omnibot.Config do
     }
   end
 
-  def channel_plugins(cfg, channel) do
-    cfg.plugins
-    |> Enum.filter(fn {_plug, cf} ->
-      cf[:channels] == :all or channel in Keyword.get(cf, :channels, [])
-    end)
+  @doc """
+  Gets all plugins that expect a message from the given config and channel.
+
+  ## Parameters
+  
+      - cfg: the configuration that holds all plugins to search
+      - channel: the channel to filter listening plugins on
+
+  ## Example
+
+  iex> cfg = %Omnibot.Config {
+  ...>     server: "irc.example.com",
+  ...>     channels: ["#general"],
+  ...>     plugins: [
+  ...>       {ExamplePlugin, channels: ["#omnibot", "#example"]},
+  ...>       {OtherPlugin, channels: ["#example"]},
+  ...>       {ThirdPlugin, channels: :all},
+  ...>     ]
+  ...> }
+  iex> Omnibot.Config.channel_plugins(cfg, "#general")
+  [{ThirdPlugin, channels: :all}]
+  iex> Omnibot.Config.channel_plugins(cfg, "#omnibot")
+  [{ExamplePlugin, channels: ["#omnibot", "#example"]}, {ThirdPlugin, channels: :all}]
+  """
+  def channel_plugins(cfg = %Omnibot.Config{}, channel) do
+    do_channel_plugins(cfg.plugins, channel)
   end
 
-  def load(path) do
+  defp do_channel_plugins([], _channel), do: []
+
+  defp do_channel_plugins([plugin | plugins], channel) when is_atom(plugin) do
+    do_channel_plugins([{plugin, plugin.default_config()} | plugins], channel)
+  end
+
+  defp do_channel_plugins([{plugin, cfg} | plugins], channel) do
+    plugin_channels = Keyword.get(cfg, :channels, [])
+    head = if plugin_channels == :all || channel in plugin_channels,
+      do: [{plugin, cfg}],
+      else: []
+    head ++ do_channel_plugins(plugins, channel)
+  end
+
+  @doc """
+  Loads a configuration from a given path and an optional config binding.
+  """
+  def load(path, binding_name \\ :config) do
     with {_, bindings} <- Code.eval_file(path) do
-      cfg = bindings[:config] 
+      cfg = bindings[binding_name] 
       plugins = cfg.plugins
                 |> Enum.map(fn
                   plug when is_atom(plug) -> {plug, plug.default_config()}
