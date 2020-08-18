@@ -5,6 +5,7 @@ config = %Config {
   server: "chat.freenode.net",
   port: 6667,
   ssl: false,
+  channels: ["#idleville"],
 
   plugins: [
     # Required for operation of Omnibot.
@@ -19,7 +20,7 @@ config = %Config {
     {Omnibot.Contrib.Linkbot, channels: :all},
     # Fortune will spit out fun messages with the !fortune command - try it out!
     {Omnibot.Contrib.Fortune, channels: :all},
-    {Omnibot.Contrib.Wordbot, channels: ["#idleville"], ignore: ["username"]},
+    {Omnibot.Contrib.Wordbot, channels: :all, ignore: ["username"]},
   ],
 
   #plugin_paths: [{"plugins", recurse: true}]
