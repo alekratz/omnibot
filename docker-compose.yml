@@ -5,5 +5,7 @@ services:
     env_file: docker.env
     volumes:
       - ".:/app"
+      # ignore build data
+      - "/app/_build"
     working_dir: "/app"
     restart: always
