@@ -11,7 +11,7 @@ defmodule Omnibot.Supervisor do
 
   @impl true
   def init(:ok) do
-    cfg = System.get_env("OMNIBOT_CFG", "omnibot.exs") |> Config.load()
+    cfg = System.get_env("OMNIBOT_CONFIG", "omnibot.exs") |> Config.load()
 
     # TODO : move cfg to its own process so reloading it is as simple as killing the process
     children = [
