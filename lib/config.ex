@@ -14,6 +14,7 @@ defmodule Omnibot.Config do
     - port: the port to connect to the server on. **(optional, default 6667)**
     - ssl: whether to use SSL or not. Note that IRC usually uses port 6697 for
            SSL. **(optional, default false)**
+    - channels: a list of channels that the bot should always join. **(optional, default [])**
     - plugins: a list of plugins to load and their configuration. **(optional, default [])**
     - plugin_paths: a list of locations to look for additional plugins. **(optional, default [])**
 
