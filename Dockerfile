@@ -25,4 +25,4 @@ WORKDIR /app
 RUN mix local.hex --force
 RUN mix local.rebar --force
 
-CMD mix run --no-halt
+CMD mix deps.get && mix run --no-halt

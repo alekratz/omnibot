@@ -7,5 +7,6 @@ services:
       - ".:/app"
       # ignore build data
       - "/app/_build"
+      - "/app/deps"
     working_dir: "/app"
     restart: always
