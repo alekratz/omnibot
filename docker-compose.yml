@@ -4,9 +4,10 @@ services:
     build: .
     env_file: docker.env
     volumes:
-      - ".:/app"
-      # ignore build data
-      - "/app/_build"
-      - "/app/deps"
+      - "./mix.exs:/app/mix.exs"
+      - "./lib:/app/lib"
+      - "./config:/app/config"
+      - "./data:/app/data"
+      - "./omnibot.exs:/app/omnibot.exs"
     working_dir: "/app"
     restart: always

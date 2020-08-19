@@ -3,7 +3,7 @@ defmodule Omnibot.Contrib.Wordbot do
   alias Omnibot.{Contrib.Wordbot, Irc, Util}
   require Logger
 
-  @default_config wordbot_source: "words.txt", wordbot_db: "wordbot.db", words_per_round: 300, hours_per_round: 5, ignore: []
+  @default_config wordbot_source: "data/wordbot/words.txt", wordbot_db: "data/wordbot/wordbot.db", words_per_round: 300, hours_per_round: 5, ignore: []
 
   @impl true
   def children(cfg) do

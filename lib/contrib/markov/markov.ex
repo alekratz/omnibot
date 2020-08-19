@@ -4,7 +4,7 @@ defmodule Omnibot.Contrib.Markov do
   require Logger
 
   @default_config [
-    save_dir: "markov",
+    save_dir: "data/markov",
     order: 2,
     save_every: 5 * 60,
     ignore: [],

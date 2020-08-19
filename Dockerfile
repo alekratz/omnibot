@@ -21,7 +21,6 @@ ENV PATH="/root/.cargo/bin:$PATH"
 RUN mkdir /app
 WORKDIR /app
 
-
 RUN mix local.hex --force
 RUN mix local.rebar --force
 
