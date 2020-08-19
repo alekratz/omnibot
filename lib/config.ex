@@ -7,16 +7,16 @@ defmodule Omnibot.Config do
 
   ## Configuration keys
 
-    - server: the IRC server to connect to. **(required)**
-    - nick: the IRC nickname to use for the bot. **(optional, default "omnibot")**
-    - user: the IRC username to use for the bot. **(optional, default "omnibot")**
-    - real: the IRC realname to use for the bot. **(optional, default "omnibot")**
-    - port: the port to connect to the server on. **(optional, default 6667)**
+    - server: the IRC server to connect to. (required)
+    - nick: the IRC nickname to use for the bot. (optional, default `"omnibot"`)
+    - user: the IRC username to use for the bot. (optional, default `"omnibot"`)
+    - real: the IRC realname to use for the bot. (optional, default `"omnibot"`)
+    - port: the port to connect to the server on. (optional, default `6667`)
     - ssl: whether to use SSL or not. Note that IRC usually uses port 6697 for
-           SSL. **(optional, default false)**
-    - channels: a list of channels that the bot should always join. **(optional, default [])**
-    - plugins: a list of plugins to load and their configuration. **(optional, default [])**
-    - plugin_paths: a list of locations to look for additional plugins. **(optional, default [])**
+           SSL. (optional, default `false`)
+    - channels: a list of channels that the bot should always join. (optional, default `[]`)
+    - plugins: a list of plugins to load and their configuration. (optional, default `[]`)
+    - plugin_paths: a list of locations to look for additional plugins. (optional, default `[]`)
 
   ## Plugins configuration
 
