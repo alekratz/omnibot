@@ -98,12 +98,18 @@ Dockerfile, docker-compose.yml, and docker.env files have been provided so you c
 omnibot.exs configuration and start a docker container. You should simply be able to run
 `docker-compose up -d` and be good to go.
 
+# Plugins
+
+TODO: short intro about plugins and links to examples
+
 # Final notes
 
 Since this is a BEAM application, you will sometimes see error messages pop up. This is normal
 behavior. If you see endless error messages (e.g. can't connect), then something is probably wrong
 and checking the logs may help you determine the issue.
 
-# Plugins
+# License
 
-TODO: short intro about plugins and links to examples
+AGPL-3.0-only
+
+See LICENSE file for details.
